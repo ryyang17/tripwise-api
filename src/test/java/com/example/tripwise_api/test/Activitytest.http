@@ -1,0 +1,62 @@
+### 1. Voeg activiteit toe aan trip 1
+POST http://localhost:8080/api/trips/1/activities
+Content-Type: application/json
+
+{
+  "name": "Visit Eiffel Tower",
+  "description": "Famous landmark in Paris",
+  "time": "10:00",
+  "location": "Champ de Mars, Paris",
+  "estimatedCost": 25.50
+}
+
+### 2. Voeg nog een activiteit toe
+POST http://localhost:8080/api/trips/1/activities
+Content-Type: application/json
+
+{
+  "name": "Seine River Cruise",
+  "description": "Boat tour along the Seine",
+  "time": "14:30",
+  "location": "Port de la Bourdonnais",
+  "estimatedCost": 15.00
+}
+
+### 3. Haal alle activiteiten voor trip 1 op
+GET http://localhost:8080/api/trips/1/activities
+
+### 4. Haal specifieke activiteit op
+GET http://localhost:8080/api/activities/1
+
+### 5. Update activiteit
+PUT http://localhost:8080/api/activities/1
+Content-Type: application/json
+
+{
+  "name": "Visit Eiffel Tower - Updated",
+  "description": "Famous landmark in Paris with photo session",
+  "time": "11:00",
+  "location": "Champ de Mars, Paris",
+  "estimatedCost": 30.00
+}
+
+### 6. Haal activiteiten met kosten op
+GET http://localhost:8080/api/trips/1/activities/with-cost
+
+### 7. Verwijder activiteit
+DELETE http://localhost:8080/api/activities/2
+
+### 8. Test met trip 2
+POST http://localhost:8080/api/trips/2/activities
+Content-Type: application/json
+
+{
+  "name": "Beach Day",
+  "description": "Relaxing at the beach",
+  "time": "morning",
+  "location": "Bondi Beach",
+  "estimatedCost": 0
+}
+
+### 9. Activiteiten voor trip 2
+GET http://localhost:8080/api/trips/2/activities
