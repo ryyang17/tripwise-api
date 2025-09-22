@@ -1,0 +1,26 @@
+### All users
+GET http://localhost:8080/api/users
+
+### Create user
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "john",
+  "email": "john@test.com"
+}
+
+### Get user
+GET http://localhost:8080/api/users/1
+
+### Update user
+PUT http://localhost:8080/api/users/1
+Content-Type: application/json
+
+{
+  "username": "john_updated",
+  "email": "john.updated@test.com"
+}
+
+### Delete user
+DELETE http://localhost:8080/api/users/1

@@ -1,5 +1,6 @@
 package com.example.tripwise_api.controller;
 
+import com.example.tripwise_api.Model.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,9 +14,5 @@ public class HelloController {
         return "Hello, World!";
     }
 
-    @PostMapping("/greet")
-    public String greetUser(@RequestBody User user) {
-        return "Hello, " + user.getName() + "!";
-    }
 }
 
