@@ -1,0 +1,24 @@
+### GET budget van een trip
+GET http://localhost:8080/api/trips/1/budget
+Accept: application/json
+
+### POST budget voor een trip aanmaken
+POST http://localhost:8080/api/trips/1/budget
+Content-Type: application/json
+
+{
+    "totalBudget": 1500,
+    "currency": "EUR"
+}
+
+### PUT budget voor een trip updaten
+PUT http://localhost:8080/api/trips/1/budget
+Content-Type: application/json
+
+{
+    "totalBudget": 2000,
+    "currency": "EUR"
+}
+
+### DELETE budget van een trip
+DELETE http://localhost:8080/api/trips/1/budget
