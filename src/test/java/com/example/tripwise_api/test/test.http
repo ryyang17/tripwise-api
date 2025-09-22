@@ -1,7 +1,4 @@
-GET http://localhost:80/api/item?id=99
-Accept: application/json
 
-###
 ### All users
 GET http://localhost:8080/api/users
 

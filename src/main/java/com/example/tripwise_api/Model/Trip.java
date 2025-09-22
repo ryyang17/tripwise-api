@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class Trip {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private int tripId;
     private Long userId;
     private String tripName;
     private LocalDate startDate;
@@ -23,9 +23,9 @@ public class Trip {
 public Trip() {
 }
 
-public Trip(int id, Long userId, String tripName, LocalDate startDate, LocalDate endDate,
+public Trip(int tripId, Long userId, String tripName, LocalDate startDate, LocalDate endDate,
             String destination, String description, LocalDateTime createdDate, Boolean isActive) {
-    this.id = id;
+    this.tripId = tripId;
     this.userId = userId;
     this.tripName = tripName;
     this.startDate = startDate;
@@ -37,12 +37,12 @@ public Trip(int id, Long userId, String tripName, LocalDate startDate, LocalDate
 }
 
 // Getters & Setters
-public int getId() {
-    return id;
+public int getTripIdId() {
+    return tripId;
 }
 
-public void setId(int id) {
-    this.id = id;
+public void setTripId(int id) {
+    this.tripId = tripId;
 }
 
 public Long getUserId() {
