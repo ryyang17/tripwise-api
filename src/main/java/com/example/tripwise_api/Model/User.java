@@ -30,7 +30,7 @@ public class User {
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate = LocalDateTime.now();
 
-    // ===== Constructors =====
+
     public User() {
     }
 
@@ -41,7 +41,7 @@ public class User {
         this.createdDate = LocalDateTime.now();
     }
 
-    // ===== Getters & Setters =====
+
     public Long getId() {
         return id;
     }
