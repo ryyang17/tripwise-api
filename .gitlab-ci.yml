@@ -4,7 +4,7 @@ stages:
   - deploy
 
 
-image: eclipse-temurin:21
+image: eclipse-temurin:24
 
 # Services voor database ; used Flyway
 services:
