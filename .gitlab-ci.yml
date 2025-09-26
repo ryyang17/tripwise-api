@@ -4,7 +4,7 @@ stages:
   - deploy
 
 
-image: eclipse-temurin:24
+image: gradle:8.4-jdk17
 
 # Services voor database ; used Flyway
 services:
