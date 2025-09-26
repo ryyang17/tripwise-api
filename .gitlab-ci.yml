@@ -1,45 +1,96 @@
-stages:          # List of stages for jobs, and their order of execution
+stages:
   - build
   - test
   - deploy
 
-# Gebruik Java 24 base image, en wrapper voor Gradle
-image: eclipse-temurin:24
+
+image: eclipse-temurin:21
+
+# Services voor database ; used Flyway
+services:
+  - postgres:15
+
+variables:
+  POSTGRES_DB: TripWise
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: 201461
+  POSTGRES_HOST_AUTH_METHOD: trust
+  # Gradle cache configuratie
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+
+# Cache voor Gradle dependencies
+cache:
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
 
 before_script:
   - chmod +x ./gradlew
   - ./gradlew --version
+  # Wacht tot database klaar is (als je database nodig hebt)
+  - |
+    if command -v pg_isready > /dev/null; then
+      until pg_isready -h postgres -p 5432 -U $POSTGRES_USER; do
+        echo "Waiting for postgres to be ready..."
+        sleep 2
+      done
+    fi
 
-build-job:       # Build stage
+build-job:
   stage: build
   script:
     - echo "Compiling the code with Gradle..."
-    - ./gradlew build -x test
+    - ./gradlew assemble --info
     - echo "Compile complete."
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - build/libs/
 
-unit-test-job:   # Unit tests
+unit-test-job:
   stage: test
   script:
     - echo "Running unit tests..."
-    - ./gradlew test
+    - ./gradlew test --info
   artifacts:
     when: always
+    expire_in: 1 week
     reports:
       junit: build/test-results/test/TEST-*.xml
     paths:
       - build/reports/tests/test/
+      - build/test-results/
 
-lint-test-job:   # Lint check
+lint-test-job:
   stage: test
   script:
     - echo "Linting code..."
-    - ./gradlew check
-    - echo "No lint issues found."
+    - ./gradlew check --info
+    - echo "Lint check completed."
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - build/reports/
 
-deploy-job:      # Deploy stage
+# Database migration job
+migrate-job:
+  stage: test
+  script:
+    - echo "Running database migrations..."
+    - ./gradlew flywayMigrate
+  only:
+    - main
+    - develop
+
+deploy-job:
   stage: deploy
   environment: production
   script:
     - echo "Deploying application..."
-    # Hier zou je bv. docker build & push, of kubectl apply zetten
+    # Voeg hier je deployment commando's toe
     - echo "Application successfully deployed."
+  only:
+    - main
+  when: manual
