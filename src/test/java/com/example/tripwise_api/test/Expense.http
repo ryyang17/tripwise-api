@@ -1,0 +1,36 @@
+### GET alle expenses van een trip
+GET http://localhost:8080/api/trips/1/expenses
+Accept: application/json
+
+### GET één expense detail
+GET http://localhost:8080/api/expenses/1
+Accept: application/json
+
+### POST nieuwe expense toevoegen
+POST http://localhost:8080/api/trips/1/expenses
+Content-Type: application/json
+
+{
+  "description": "Hotelovernachting",
+  "amount": 250.75,
+  "category": "hotel",
+  "expenseDate": "2025-08-06",
+  "receiptUrl": "https://example.com/receipts/hotel.png",
+  "validated": true
+}
+
+### PUT expense updaten
+PUT http://localhost:8080/api/expenses/1
+Content-Type: application/json
+
+{
+  "description": "Hotel + ontbijt",
+  "amount": 300.50,
+  "category": "hotel",
+  "expenseDate": "2025-08-06",
+  "receiptUrl": "https://example.com/receipts/hotel-breakfast.png",
+  "validated": true
+}
+
+### DELETE expense
+DELETE http://localhost:8080/api/expenses/1

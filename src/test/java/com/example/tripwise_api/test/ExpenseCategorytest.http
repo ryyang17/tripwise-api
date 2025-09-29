@@ -1,0 +1,54 @@
+### 1. Maak categorieën aan
+POST http://localhost:8080/api/categories
+Content-Type: application/json
+
+{
+  "categoryName": "Food",
+  "categoryDescription": "Restaurant meals, groceries, snacks"
+}
+
+### 2. Meer categorieën
+POST http://localhost:8080/api/categories
+Content-Type: application/json
+
+{
+  "categoryName": "Transport",
+  "categoryDescription": "Flights, trains, taxis, car rental"
+}
+
+### 3.
+POST http://localhost:8080/api/categories
+Content-Type: application/json
+
+{
+  "categoryName": "Accommodation",
+  "categoryDescription": "Hotels, hostels, Airbnb"
+}
+
+### 4. Haal alle categorieën op
+GET http://localhost:8080/api/categories
+
+### 5. Alleen actieve categorieën
+GET http://localhost:8080/api/categories/active
+
+### 6. Specifieke categorie
+GET http://localhost:8080/api/categories/1
+
+### 7. Update categorie
+PUT http://localhost:8080/api/categories/1
+Content-Type: application/json
+
+{
+  "categoryName": "Food & Drinks",
+  "categoryDescription": "Restaurant meals, groceries, snacks, beverages",
+  "isActive": true
+}
+
+### 8. Soft delete (deactiveer)
+DELETE http://localhost:8080/api/categories/2
+
+### 9. Hard delete (permanent)
+DELETE http://localhost:8080/api/categories/3/hard
+
+### 10. Check actieve categorieën na delete
+GET http://localhost:8080/api/categories/active
