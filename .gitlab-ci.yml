@@ -25,8 +25,10 @@ build:
   stage: build
   image: gradle:8.10-jdk17
   <<: *cache-gradle
+  before_script:
+    - chmod +x ./gradlew
   script:
-    - gradle --version
+    - ./gradlew --version
     - ./gradlew clean build -x test
   artifacts:
     paths:
@@ -36,9 +38,10 @@ build:
 test:
   stage: test
   image: gradle:8.10-jdk17
-  <<: *cache-gradle
+  before_script:
+    - chmod +x ./gradlew
   script:
-    - ./gradlew test
+    - ./gradlew test -Dspring.profiles.active=test
   artifacts:
     when: always
     reports:
@@ -48,6 +51,8 @@ package:
   stage: package
   image: gradle:8.10-jdk17
   <<: *cache-gradle
+  before_script:
+    - chmod +x ./gradlew
   script:
     - ./gradlew bootJar
   artifacts:
