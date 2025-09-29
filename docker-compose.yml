@@ -11,18 +11,30 @@ services:
       - "5432:5432"
     volumes:
       - tripwise-db-data:/var/lib/postgresql/data
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d TripWise"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
   app:
     build: .
     container_name: tripwise-app
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://TripWise-DB:5432/TripWise
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/TripWise
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 201461
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_URL: jdbc:postgresql://db:5432/TripWise
+      SPRING_FLYWAY_USER: postgres
+      SPRING_FLYWAY_PASSWORD: 201461
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   tripwise-db-data:
