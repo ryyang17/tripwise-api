@@ -16,96 +16,98 @@ public class Trip {
     private LocalDate endDate;
     private String destination;
     private String description;
-    private LocalDateTime createdDate = LocalDateTime.now();
-    private Boolean isActive = true;
+    private LocalDateTime createdDate;
+    private boolean isActive;
 
-// Constructors
-public Trip() {
-}
+    // Constructors
+    public Trip() {
+        this.createdDate = LocalDateTime.now();
+        this.isActive = true;
+    }
 
-public Trip(int tripId, Long userId, String tripName, LocalDate startDate, LocalDate endDate,
-            String destination, String description, LocalDateTime createdDate, Boolean isActive) {
-    this.tripId = tripId;
-    this.userId = userId;
-    this.tripName = tripName;
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.destination = destination;
-    this.description = description;
-    this.createdDate = createdDate;
-    this.isActive = isActive;
-}
+    public Trip(int tripId, Long userId, String tripName, LocalDate startDate, LocalDate endDate,
+                String destination, String description, LocalDateTime createdDate, boolean isActive) {
+        this.tripId = tripId;
+        this.userId = userId;
+        this.tripName = tripName;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.destination = destination;
+        this.description = description;
+        this.createdDate = createdDate;
+        this.isActive = isActive;
+    }
 
-// Getters & Setters
-public int getTripIdId() {
-    return tripId;
-}
+    // Getters & Setters
+    public int getTripId() {
+        return tripId;
+    }
 
-public void setTripId(int id) {
-    this.tripId = tripId;
-}
+    public void setTripId(int tripId) {
+        this.tripId = tripId;
+    }
 
-public Long getUserId() {
-    return userId;
-}
+    public Long getUserId() {
+        return userId;
+    }
 
-public void setUserId(Long userId) {
-    this.userId = userId;
-}
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-public String getTripName() {
-    return tripName;
-}
+    public String getTripName() {
+        return tripName;
+    }
 
-public void setTripName(String tripName) {
-    this.tripName = tripName;
-}
+    public void setTripName(String tripName) {
+        this.tripName = tripName;
+    }
 
-public LocalDate getStartDate() {
-    return startDate;
-}
+    public LocalDate getStartDate() {
+        return startDate;
+    }
 
-public void setStartDate(LocalDate startDate) {
-    this.startDate = startDate;
-}
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
 
-public LocalDate getEndDate() {
-    return endDate;
-}
+    public LocalDate getEndDate() {
+        return endDate;
+    }
 
-public void setEndDate(LocalDate endDate) {
-    this.endDate = endDate;
-}
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
 
-public String getDestination() {
-    return destination;
-}
+    public String getDestination() {
+        return destination;
+    }
 
-public void setDestination(String destination) {
-    this.destination = destination;
-}
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
 
-public String getDescription() {
-    return description;
-}
+    public String getDescription() {
+        return description;
+    }
 
-public void setDescription(String description) {
-    this.description = description;
-}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-public LocalDateTime getCreatedDate() {
-    return createdDate;
-}
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
 
-public void setCreatedDate(LocalDateTime createdDate) {
-    this.createdDate = createdDate;
-}
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
 
-public Boolean getIsActive() {
-    return isActive;
-}
+    public boolean isActive() {
+        return isActive;
+    }
 
-public void setIsActive(Boolean active) {
-    isActive = active;
-}
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
 }

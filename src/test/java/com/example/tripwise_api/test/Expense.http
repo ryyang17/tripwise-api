@@ -12,7 +12,7 @@ Content-Type: application/json
 
 {
   "description": "Hotelovernachting",
-  "amount": 250.75,
+  "bigDecimal": 250.75,
   "category": "hotel",
   "expenseDate": "2025-08-06",
   "receiptUrl": "https://example.com/receipts/hotel.png",
@@ -25,7 +25,7 @@ Content-Type: application/json
 
 {
   "description": "Hotel + ontbijt",
-  "amount": 300.50,
+  "bigDecimal": 300.50,
   "category": "hotel",
   "expenseDate": "2025-08-06",
   "receiptUrl": "https://example.com/receipts/hotel-breakfast.png",
