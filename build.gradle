@@ -23,13 +23,19 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 	implementation 'org.flywaydb:flyway-core:9.22.3'
 	implementation 'org.postgresql:postgresql:42.7.7'
+
+    //Force upgrade to fix CVE-2025-48924
+	implementation 'org.apache.commons:commons-lang3:3.18.0'
+
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
 }
 
 tasks.named('test') {
@@ -44,3 +50,4 @@ flyway {
 	locations = ['filesystem:src/main/resources/db/migration']
 	baselineOnMigrate = true
 }
+

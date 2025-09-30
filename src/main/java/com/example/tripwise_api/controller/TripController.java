@@ -4,6 +4,7 @@ import com.example.tripwise_api.Model.Trip;
 import com.example.tripwise_api.Service.TripService;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 import java.util.Optional;
 
