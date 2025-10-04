@@ -9,7 +9,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/trips")
-@CrossOrigin(origins = "*")
 public class BudgetController {
 
     @Autowired

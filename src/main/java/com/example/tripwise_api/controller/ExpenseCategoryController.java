@@ -4,6 +4,7 @@ package com.example.tripwise_api.controller;
 import com.example.tripwise_api.Model.ExpenseCategory;
 import com.example.tripwise_api.Repository.ExpenseCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "*")
 public class ExpenseCategoryController {
 
     @Autowired

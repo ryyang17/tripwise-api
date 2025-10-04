@@ -4,13 +4,11 @@ import com.example.tripwise_api.Model.Trip;
 import com.example.tripwise_api.Service.TripService;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/trips")
-@CrossOrigin(origins = "http://localhost:3000")
 public class TripController {
 
     private final TripService tripService;
