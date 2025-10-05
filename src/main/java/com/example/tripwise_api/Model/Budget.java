@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "budgets")
+@Table(name = "budget")
 public class Budget {
 
     @Id
