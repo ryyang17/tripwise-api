@@ -10,15 +10,19 @@ public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int budgetId;
-    private int tripId;
+
+    @ManyToOne
+    @JoinColumn(name = "trip_id", referencedColumnName = "tripId")
+    private Trip trip;
+
     private double totalBudget;
     private String currency;
     private Date createdDate = new Date();
 
     public Budget() {}
 
-    public Budget(int tripId, double totalBudget, String currency) {
-        this.tripId = tripId;
+    public Budget(Trip trip, double totalBudget, String currency) {
+        this.trip = trip;
         this.totalBudget = totalBudget;
         this.currency = currency;
     }
@@ -26,8 +30,8 @@ public class Budget {
     public int getBudgetId() { return budgetId; }
     public void setBudgetId(int budgetId) { this.budgetId = budgetId; }
 
-    public int getTripId() { return tripId; }
-    public void setTripId(int tripId) { this.tripId = tripId; }
+    public Trip getTrip() { return trip; }
+    public void setTrip(Trip trip) { this.trip = trip; }
 
     public double getTotalBudget() { return totalBudget; }
     public void setTotalBudget(double totalBudget) { this.totalBudget = totalBudget; }

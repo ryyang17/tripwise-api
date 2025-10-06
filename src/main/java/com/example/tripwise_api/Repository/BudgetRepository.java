@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget, Integer> {
-    Optional<Budget> findByTripId(int tripId);
-    void deleteByTripId(int tripId);
+    Optional<Budget> findByTrip_TripId(int tripId);
+    void deleteByTrip_TripId(int tripId);
+
 }
