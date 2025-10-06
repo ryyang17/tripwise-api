@@ -17,6 +17,7 @@ public class Trip {
     private LocalDate endDate;
     private String destination;
     private String description;
+    private String transportation;
     private LocalDateTime createdDate;
     private boolean isActive;
 
@@ -27,7 +28,7 @@ public class Trip {
     }
 
     public Trip(int tripId, Long userId, String tripName, LocalDate startDate, LocalDate endDate,
-                String destination, String description, LocalDateTime createdDate, boolean isActive) {
+                String destination, String description, String transportation, LocalDateTime createdDate, boolean isActive) {
         this.tripId = tripId;
         this.userId = userId;
         this.tripName = tripName;
@@ -35,9 +36,11 @@ public class Trip {
         this.endDate = endDate;
         this.destination = destination;
         this.description = description;
+        this.transportation = transportation;
         this.createdDate = createdDate;
         this.isActive = isActive;
     }
+
 
     // Getters & Setters
     public int getTripId() {
@@ -111,4 +114,12 @@ public class Trip {
     public void setActive(boolean active) {
         this.isActive = active;
     }
+    public String getTransportation() {
+        return transportation;
+    }
+
+    public void setTransportation(String transportation) {
+        this.transportation = transportation;
+    }
+
 }

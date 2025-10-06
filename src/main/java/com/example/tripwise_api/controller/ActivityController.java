@@ -63,10 +63,10 @@ public class ActivityController {
 
     // DELETE /api/activities/{id} - Verwijder activiteit
     @DeleteMapping("/activities/{id}")
-    public ResponseEntity<String> deleteActivity(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteActivity(@PathVariable Long id) {
         if (activityRepository.existsById(id)) {
             activityRepository.deleteById(id);
-            return ResponseEntity.ok("Activity deleted successfully");
+            return ResponseEntity.noContent().build(); // 204 No Content
         }
         return ResponseEntity.notFound().build();
     }
