@@ -31,11 +31,12 @@ Users can create trips, manage budgets, and add activities to their journeys.
 ## ⚙️ Local Setup
 
 ### 1. Clone the repository
-```bash
+
 git clone https://github.com/your-username/tripwise-backend.git
 cd tripwise-backend
 
 ### 2. Start PostgreSQL locally
+
 Create a new database:
 psql -U postgres
 CREATE DATABASE tripwise;
@@ -47,12 +48,13 @@ spring.datasource.password=yourpassword
 spring.jpa.hibernate.ddl-auto=update
 
 ### 3. Run the application
+
 ./gradlew bootRun
 
 The API will be available at:
 http://localhost:8080
 
-## Run with Docker
+### 4. Run with Docker
 Build the image
 docker build -t tripwise-api .
 
