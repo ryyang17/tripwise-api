@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Integer> {
+    // Custom query to find trips by user ID
     List<Trip> findByUserId(Long userId);
 }

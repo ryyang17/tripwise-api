@@ -1,49 +1,57 @@
 package com.example.tripwise_api.Service;
 
 import com.example.tripwise_api.Model.Trip;
-import com.example.tripwise_api.Repository.TripRepository;
+import com.example.tripwise_api.DAL.TripDAL;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * TripService: Business logic layer for Trip operations
+ * This class uses TripDAL (Data Access Layer) to interact with the database.
+ * The DAL abstracts all data access, so TripService focuses only on business rules and validation.
+ */
 @Service
 @Transactional
 public class TripService {
+    // TripDAL is injected here. All database operations are delegated to DAL.
+    private final TripDAL tripDAL;
 
-    private final TripRepository tripRepository;
-
-    public TripService(TripRepository tripRepository) {
-        this.tripRepository = tripRepository;
+    public TripService(TripDAL tripDAL) {
+        this.tripDAL = tripDAL;
     }
 
     @Transactional(readOnly = true)
     public List<Trip> getAllTrips() {
-        return tripRepository.findAll();
+        // Example of using DAL for data access
+        return tripDAL.getAllTrips();
     }
 
 
     @Transactional(readOnly = true)
     public Optional<Trip> getTripById(Integer id) {
-        return tripRepository.findById(id);
+        // All queries go through DAL
+        return tripDAL.getTripById(id);
     }
 
 
     @Transactional(readOnly = true)
     public List<Trip> getTripsByUserId(Long userId) {
-        return tripRepository.findByUserId(userId);
+        return tripDAL.getTripsByUserId(userId);
     }
 
 
     public Trip createTrip(Trip trip) {
         validateTrip(trip);
-        return tripRepository.save(trip);
+        // Save operation is handled by DAL
+        return tripDAL.saveTrip(trip);
     }
 
 
     public Trip updateTrip(Integer id, Trip tripDetails) {
-        Trip existingTrip = tripRepository.findById(id)
+        Trip existingTrip = tripDAL.getTripById(id)
                 .orElseThrow(() -> new RuntimeException("Trip not found with id: " + id));
 
         validateTrip(tripDetails);
@@ -57,21 +65,22 @@ public class TripService {
         existingTrip.setDescription(tripDetails.getDescription());
         existingTrip.setActive(tripDetails.isActive());
 
-        return tripRepository.save(existingTrip);
+        return tripDAL.saveTrip(existingTrip);
     }
 
 
     public void deleteTrip(Integer id) {
-        if (!tripRepository.existsById(id)) {
+        if (!tripDAL.existsById(id)) {
             throw new RuntimeException("Trip not found with id: " + id);
         }
-        tripRepository.deleteById(id);
+        tripDAL.deleteTrip(id);
     }
 
 
 
     /**
      * Basic validation for trip data
+     * This logic is part of the service layer, not DAL.
      */
     private void validateTrip(Trip trip) {
         if (trip.getTripName() == null || trip.getTripName().trim().isEmpty()) {
