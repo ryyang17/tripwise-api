@@ -1,10 +1,9 @@
 package com.example.tripwise_api.controller;
 
-
 import com.example.tripwise_api.Model.ExpenseCategory;
-import com.example.tripwise_api.Repository.ExpenseCategoryRepository;
+import com.example.tripwise_api.Service.ExpenseCategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,87 +15,71 @@ import java.util.Optional;
 public class ExpenseCategoryController {
 
     @Autowired
-    private ExpenseCategoryRepository categoryRepository;
+    private ExpenseCategoryService categoryService;
 
-    // GET /api/categories - Alle categorieën
+    // GET /api/categories - All categories
     @GetMapping
-    public List<ExpenseCategory> getAllCategories() {
-        return categoryRepository.findAll();
+    public ResponseEntity<List<ExpenseCategory>> getAllCategories() {
+        List<ExpenseCategory> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(categories);
     }
 
-    // GET /api/categories/active - Alleen actieve categorieën
+    // GET /api/categories/active - Only active categories
     @GetMapping("/active")
-    public List<ExpenseCategory> getActiveCategories() {
-        return categoryRepository.findByIsActiveTrue();
+    public ResponseEntity<List<ExpenseCategory>> getActiveCategories() {
+        List<ExpenseCategory> categories = categoryService.getActiveCategories();
+        return ResponseEntity.ok(categories);
     }
 
-    // GET /api/categories/{id} - Specifieke categorie
+    // GET /api/categories/{id} - Specific category
     @GetMapping("/{id}")
     public ResponseEntity<ExpenseCategory> getCategoryById(@PathVariable Long id) {
-        Optional<ExpenseCategory> category = categoryRepository.findById(id);
-        if (category.isPresent()) {
-            return ResponseEntity.ok(category.get());
-        }
-        return ResponseEntity.notFound().build();
+        Optional<ExpenseCategory> category = categoryService.getCategoryById(id);
+        return category.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST /api/categories - Nieuwe categorie
+    // POST /api/categories - Create new category
     @PostMapping
-    public ResponseEntity<ExpenseCategory> createCategory(@RequestBody ExpenseCategory category) {
-        // Check of naam al bestaat
-        if (categoryRepository.existsByCategoryName(category.getCategoryName())) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> createCategory(@RequestBody ExpenseCategory category) {
+        try {
+            ExpenseCategory savedCategory = categoryService.createCategory(category);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        ExpenseCategory savedCategory = categoryRepository.save(category);
-        return ResponseEntity.ok(savedCategory);
     }
 
-    // PUT /api/categories/{id} - Update categorie
+    // PUT /api/categories/{id} - Update category
     @PutMapping("/{id}")
-    public ResponseEntity<ExpenseCategory> updateCategory(@PathVariable Long id, @RequestBody ExpenseCategory categoryDetails) {
-        Optional<ExpenseCategory> optionalCategory = categoryRepository.findById(id);
-
-        if (optionalCategory.isPresent()) {
-            ExpenseCategory category = optionalCategory.get();
-
-            // Update velden
-            category.setCategoryName(categoryDetails.getCategoryName());
-            category.setCategoryDescription(categoryDetails.getCategoryDescription());
-            category.setIsActive(categoryDetails.getIsActive());
-
-            ExpenseCategory updatedCategory = categoryRepository.save(category);
+    public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody ExpenseCategory categoryDetails) {
+        try {
+            ExpenseCategory updatedCategory = categoryService.updateCategory(id, categoryDetails);
             return ResponseEntity.ok(updatedCategory);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-
-        return ResponseEntity.notFound().build();
     }
 
-    // DELETE /api/categories/{id} - Verwijder categorie (soft delete)
+    // DELETE /api/categories/{id} - Soft delete (deactivate)
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
-        Optional<ExpenseCategory> optionalCategory = categoryRepository.findById(id);
-
-        if (optionalCategory.isPresent()) {
-            ExpenseCategory category = optionalCategory.get();
-
-            // Soft delete - zet alleen is_active op false
-            category.setIsActive(false);
-            categoryRepository.save(category);
-
+        try {
+            categoryService.deactivateCategory(id);
             return ResponseEntity.ok("Category deactivated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-
-        return ResponseEntity.notFound().build();
     }
 
-    // DELETE /api/categories/{id}/hard - Echt verwijderen
+    // DELETE /api/categories/{id}/hard - Permanent delete
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<String> hardDeleteCategory(@PathVariable Long id) {
-        if (categoryRepository.existsById(id)) {
-            categoryRepository.deleteById(id);
+        try {
+            categoryService.deleteCategory(id);
             return ResponseEntity.ok("Category permanently deleted");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 }

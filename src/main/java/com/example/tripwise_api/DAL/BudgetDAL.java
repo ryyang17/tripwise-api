@@ -20,6 +20,11 @@ public class BudgetDAL {
         return budgetRepository.findAll();
     }
 
+    // Get budgets by trip ID
+    public List<Budget> getBudgetsByTripId(int tripId) {
+        return budgetRepository.findByTrip_TripId(tripId);
+    }
+
     // Get budget by its ID
     public Optional<Budget> getBudgetById(Integer id) {
         return budgetRepository.findById(id);

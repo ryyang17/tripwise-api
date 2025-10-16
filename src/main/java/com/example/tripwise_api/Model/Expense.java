@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "expenses")
+@Table(name = "expense")
 public class Expense {
 
     @Id
@@ -16,7 +16,11 @@ public class Expense {
     private int tripId;
     private String description;
     private BigDecimal amount;
-    private String category;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private ExpenseCategory category;
+
     private LocalDate expenseDate;
     private LocalDateTime createdDate = LocalDateTime.now();
     private String receiptUrl;
@@ -24,7 +28,7 @@ public class Expense {
 
     public Expense() {}
 
-    public Expense(int tripId, String description, BigDecimal amount, String category, LocalDate expenseDate, String receiptUrl) {
+    public Expense(int tripId, String description, BigDecimal amount, ExpenseCategory category, LocalDate expenseDate, String receiptUrl) {
         this.tripId = tripId;
         this.description = description;
         this.amount = amount;
@@ -32,7 +36,6 @@ public class Expense {
         this.expenseDate = expenseDate;
         this.receiptUrl = receiptUrl;
     }
-
 
     public int getExpenseId() { return expenseId; }
     public void setExpenseId(int expenseId) { this.expenseId = expenseId; }
@@ -46,8 +49,8 @@ public class Expense {
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public ExpenseCategory getCategory() { return category; }
+    public void setCategory(ExpenseCategory category) { this.category = category; }
 
     public LocalDate getExpenseDate() { return expenseDate; }
     public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }

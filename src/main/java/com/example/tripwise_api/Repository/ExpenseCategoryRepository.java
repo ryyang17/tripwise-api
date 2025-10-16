@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory, Long> {
@@ -12,7 +13,7 @@ public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory
     List<ExpenseCategory> findByIsActiveTrue();
 
     // Zoek op naam
-    ExpenseCategory findByCategoryName(String categoryName);
+    Optional <ExpenseCategory> findByCategoryName(String categoryName);
 
     // Check of naam al bestaat
     boolean existsByCategoryName(String categoryName);

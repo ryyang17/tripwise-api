@@ -1,63 +1,67 @@
 package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.Model.Expense;
-import com.example.tripwise_api.Repository.ExpenseRepository;
+import com.example.tripwise_api.Service.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
 public class ExpenseController {
 
     @Autowired
-    private ExpenseRepository expenseRepository;
+    private ExpenseService expenseService;
 
-    // GET /trips/{tripId}/expenses - Alle expenses voor een trip
+    // GET /trips/{tripId}/expenses - All expenses for a trip
     @GetMapping("/trips/{tripId}/expenses")
-    public List<Expense> getExpensesByTripId(@PathVariable int tripId) {
-        return expenseRepository.findByTripId(tripId);
+    public ResponseEntity<List<Expense>> getExpensesByTripId(@PathVariable int tripId) {
+        List<Expense> expenses = expenseService.getExpensesByTripId(tripId);
+        return ResponseEntity.ok(expenses);
     }
 
-    // GET /expenses/{id} - Één expense detail ophalen
+    // GET /expenses/{id} - Get expense detail
     @GetMapping("/expenses/{id}")
-    public Expense getExpenseById(@PathVariable int id) {
-        return expenseRepository.findById(id).orElseThrow();
+    public ResponseEntity<Expense> getExpenseById(@PathVariable int id) {
+        Optional<Expense> expense = expenseService.getExpenseById(id);
+        return expense.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST /trips/{tripId}/expenses - Nieuwe expense toevoegen aan trip
+    // POST /trips/{tripId}/expenses - Add new expense to trip
     @PostMapping("/trips/{tripId}/expenses")
-    public Expense addExpense(@PathVariable int tripId, @RequestBody Expense expenseDetails) {
-        Expense expense = new Expense();
-        expense.setTripId(tripId);
-        expense.setDescription(expenseDetails.getDescription());
-        expense.setAmount(expenseDetails.getAmount());
-        expense.setCategory(expenseDetails.getCategory());
-        expense.setExpenseDate(expenseDetails.getExpenseDate());
-        expense.setReceiptUrl(expenseDetails.getReceiptUrl());
-        expense.setValidated(expenseDetails.isValidated());
-
-        return expenseRepository.save(expense);
+    public ResponseEntity<?> addExpense(@PathVariable int tripId, @RequestBody Expense expenseDetails) {
+        try {
+            Expense expense = expenseService.createExpense(tripId, expenseDetails);
+            return ResponseEntity.status(HttpStatus.CREATED).body(expense);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // PUT /expenses/{id} - Update expense
     @PutMapping("/expenses/{id}")
-    public Expense updateExpense(@PathVariable int id, @RequestBody Expense expenseDetails) {
-        Expense expense = expenseRepository.findById(id).orElseThrow();
-        expense.setDescription(expenseDetails.getDescription());
-        expense.setAmount(expenseDetails.getAmount());
-        expense.setCategory(expenseDetails.getCategory());
-        expense.setExpenseDate(expenseDetails.getExpenseDate());
-        expense.setReceiptUrl(expenseDetails.getReceiptUrl());
-        expense.setValidated(expenseDetails.isValidated());
-
-        return expenseRepository.save(expense);
+    public ResponseEntity<?> updateExpense(@PathVariable int id, @RequestBody Expense expenseDetails) {
+        try {
+            Expense expense = expenseService.updateExpense(id, expenseDetails);
+            return ResponseEntity.ok(expense);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
-    // DELETE /expenses/{id} - Verwijder expense
+    // DELETE /expenses/{id} - Delete expense
     @DeleteMapping("/expenses/{id}")
-    public void deleteExpense(@PathVariable int id) {
-        expenseRepository.deleteById(id);
+    public ResponseEntity<String> deleteExpense(@PathVariable int id) {
+        try {
+            expenseService.deleteExpense(id);
+            return ResponseEntity.ok("Expense deleted successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }

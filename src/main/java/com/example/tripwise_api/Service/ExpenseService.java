@@ -2,6 +2,7 @@ package com.example.tripwise_api.Service;
 
 import com.example.tripwise_api.Model.Expense;
 import com.example.tripwise_api.DAL.ExpenseDAL;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,11 +12,9 @@ import java.util.Optional;
 @Service
 @Transactional
 public class ExpenseService {
-    private final ExpenseDAL expenseDAL;
 
-    public ExpenseService(ExpenseDAL expenseDAL) {
-        this.expenseDAL = expenseDAL;
-    }
+    @Autowired
+    private ExpenseDAL expenseDAL;
 
     @Transactional(readOnly = true)
     public List<Expense> getAllExpenses() {
@@ -23,26 +22,46 @@ public class ExpenseService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Expense> getExpenseById(Integer id) {
+    public List<Expense> getExpensesByTripId(int tripId) {
+        return expenseDAL.getExpensesByTripId(tripId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Expense> getExpenseById(int id) {
         return expenseDAL.getExpenseById(id);
     }
 
-    public Expense createExpense(Expense expense) {
-        // Add business validation here if needed
+    public Expense createExpense(int tripId, Expense expenseDetails) {
+        Expense expense = new Expense();
+        expense.setTripId(tripId);
+        expense.setDescription(expenseDetails.getDescription());
+        expense.setAmount(expenseDetails.getAmount());
+        expense.setCategory(expenseDetails.getCategory());
+        expense.setExpenseDate(expenseDetails.getExpenseDate());
+        expense.setReceiptUrl(expenseDetails.getReceiptUrl());
+        expense.setValidated(expenseDetails.isValidated());
+
         return expenseDAL.saveExpense(expense);
     }
 
-    public Expense updateExpense(Integer id, Expense expenseDetails) {
-        Expense existingExpense = expenseDAL.getExpenseById(id)
-                .orElseThrow(() -> new RuntimeException("Expense not found with id: " + id));
-        return expenseDAL.saveExpense(existingExpense);
+    public Expense updateExpense(int id, Expense expenseDetails) {
+        Expense expense = expenseDAL.getExpenseById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Expense not found with id: " + id));
+
+        expense.setDescription(expenseDetails.getDescription());
+        expense.setAmount(expenseDetails.getAmount());
+        expense.setCategory(expenseDetails.getCategory());
+        expense.setExpenseDate(expenseDetails.getExpenseDate());
+        expense.setReceiptUrl(expenseDetails.getReceiptUrl());
+        expense.setValidated(expenseDetails.isValidated());
+
+        return expenseDAL.saveExpense(expense);
     }
 
-    public void deleteExpense(Integer id) {
+    public void deleteExpense(int id) {
         if (!expenseDAL.existsById(id)) {
-            throw new RuntimeException("Expense not found with id: " + id);
+            throw new IllegalArgumentException("Expense not found with id: " + id);
         }
         expenseDAL.deleteExpense(id);
     }
 }
-

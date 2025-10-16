@@ -2,20 +2,20 @@ package com.example.tripwise_api.Service;
 
 import com.example.tripwise_api.Model.User;
 import com.example.tripwise_api.DAL.UserDAL;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @Transactional
 public class UserService {
-    private final UserDAL userDAL;
 
-    public UserService(UserDAL userDAL) {
-        this.userDAL = userDAL;
-    }
+    @Autowired
+    private UserDAL userDAL;
 
     @Transactional(readOnly = true)
     public List<User> getAllUsers() {
@@ -28,21 +28,27 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        // Add business validation here if needed
+        user.setCreatedDate(LocalDateTime.now());
         return userDAL.saveUser(user);
     }
 
     public User updateUser(Long id, User userDetails) {
-        User existingUser = userDAL.getUserById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        // Update fields as needed
-        // ...existing code...
-        return userDAL.saveUser(existingUser);
+        User user = userDAL.getUserById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
+
+        user.setUsername(userDetails.getUsername());
+        user.setEmail(userDetails.getEmail());
+
+        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+            user.setPassword(userDetails.getPassword());
+        }
+
+        return userDAL.saveUser(user);
     }
 
     public void deleteUser(Long id) {
         if (!userDAL.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
+            throw new IllegalArgumentException("User not found with id: " + id);
         }
         userDAL.deleteUser(id);
     }

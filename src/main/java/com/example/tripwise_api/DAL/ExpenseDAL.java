@@ -19,6 +19,10 @@ public class ExpenseDAL {
         return expenseRepository.findAll();
     }
 
+    public List<Expense> getExpensesByTripId(int tripId) {
+        return expenseRepository.findByTripId(tripId);
+    }
+
     public Optional<Expense> getExpenseById(Integer id) {
         return expenseRepository.findById(id);
     }
@@ -35,4 +39,3 @@ public class ExpenseDAL {
         return expenseRepository.existsById(id);
     }
 }
-

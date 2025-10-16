@@ -1,50 +1,60 @@
 package com.example.tripwise_api.Service;
 
 import com.example.tripwise_api.Model.ExpenseCategory;
-import com.example.tripwise_api.DAL.ExpenseCategoryDAL;
+import com.example.tripwise_api.Repository.ExpenseCategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class ExpenseCategoryService {
-    private final ExpenseCategoryDAL expenseCategoryDAL;
 
-    public ExpenseCategoryService(ExpenseCategoryDAL expenseCategoryDAL) {
-        this.expenseCategoryDAL = expenseCategoryDAL;
+    @Autowired
+    private ExpenseCategoryRepository categoryRepository;
+
+    public List<ExpenseCategory> getAllCategories() {
+        return categoryRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<ExpenseCategory> getAllExpenseCategories() {
-        return expenseCategoryDAL.getAllExpenseCategories();
+    public List<ExpenseCategory> getActiveCategories() {
+        return categoryRepository.findByIsActiveTrue();
     }
 
-    @Transactional(readOnly = true)
-    public Optional<ExpenseCategory> getExpenseCategoryById(Long id) {
-        return expenseCategoryDAL.getExpenseCategoryById(id);
+    public Optional<ExpenseCategory> getCategoryById(Long id) {
+        return categoryRepository.findById(id);
     }
 
-    public ExpenseCategory createExpenseCategory(ExpenseCategory expenseCategory) {
-        // Add business validation here if needed
-        return expenseCategoryDAL.saveExpenseCategory(expenseCategory);
-    }
-
-    public ExpenseCategory updateExpenseCategory(Long id, ExpenseCategory expenseCategoryDetails) {
-        ExpenseCategory existingExpenseCategory = expenseCategoryDAL.getExpenseCategoryById(id)
-                .orElseThrow(() -> new RuntimeException("ExpenseCategory not found with id: " + id));
-        // Update fields as needed
-        // ...existing code...
-        return expenseCategoryDAL.saveExpenseCategory(existingExpenseCategory);
-    }
-
-    public void deleteExpenseCategory(Long id) {
-        if (!expenseCategoryDAL.existsById(id)) {
-            throw new RuntimeException("ExpenseCategory not found with id: " + id);
+    public ExpenseCategory createCategory(ExpenseCategory category) {
+        if (categoryRepository.existsByCategoryName(category.getCategoryName())) {
+            throw new IllegalArgumentException("Category with name '" + category.getCategoryName() + "' already exists");
         }
-        expenseCategoryDAL.deleteExpenseCategory(id);
+        return categoryRepository.save(category);
+    }
+
+    public ExpenseCategory updateCategory(Long id, ExpenseCategory categoryDetails) {
+        ExpenseCategory category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + id));
+
+        category.setCategoryName(categoryDetails.getCategoryName());
+        category.setCategoryDescription(categoryDetails.getCategoryDescription());
+        category.setIsActive(categoryDetails.getIsActive());
+
+        return categoryRepository.save(category);
+    }
+
+    public void deactivateCategory(Long id) {
+        ExpenseCategory category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + id));
+        category.setIsActive(false);
+        categoryRepository.save(category);
+    }
+
+    public void deleteCategory(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new IllegalArgumentException("Category not found with id: " + id);
+        }
+        categoryRepository.deleteById(id);
     }
 }
-

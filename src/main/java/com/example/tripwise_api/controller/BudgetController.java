@@ -1,77 +1,59 @@
 package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.Model.Budget;
-import com.example.tripwise_api.Model.Trip;
-import com.example.tripwise_api.Repository.BudgetRepository;
-import com.example.tripwise_api.Repository.TripRepository;
+import com.example.tripwise_api.Service.BudgetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/trips")
 public class BudgetController {
 
     @Autowired
-    private BudgetRepository budgetRepository;
-
-    @Autowired
-    private TripRepository tripRepository;
+    private BudgetService budgetService;
 
     // GET /trips/{tripId}/budget - Retrieve budget for a trip
     @GetMapping("/{tripId}/budget")
-    public Budget getBudgetByTripId(@PathVariable int tripId) {
-        List<Budget> budgets = budgetRepository.findByTrip_TripId(tripId);
-        if (budgets.isEmpty()) return null;
-        // Return the most recent budget (last in list)
-        return budgets.get(budgets.size() - 1);
+    public ResponseEntity<Budget> getBudgetByTripId(@PathVariable int tripId) {
+        Budget budget = budgetService.getBudgetByTripId(tripId);
+        if (budget == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(budget);
     }
 
     // POST /trips/{tripId}/budget - Create budget for a trip
     @PostMapping("/{tripId}/budget")
-    public Budget createBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
-        // Delete existing budgets for this trip first
-        List<Budget> existingBudgets = budgetRepository.findByTrip_TripId(tripId);
-        existingBudgets.forEach(budget -> budgetRepository.deleteById(budget.getBudgetId()));
-
-        Budget budget = new Budget();
-        Trip trip = tripRepository.findById(tripId).orElseThrow();
-        budget.setTrip(trip);
-        budget.setTotalBudget(budgetDetails.getTotalBudget());
-        budget.setCurrency(budgetDetails.getCurrency());
-        return budgetRepository.save(budget);
+    public ResponseEntity<?> createBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
+        try {
+            Budget budget = budgetService.createBudget(tripId, budgetDetails);
+            return ResponseEntity.status(HttpStatus.CREATED).body(budget);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // PUT /trips/{tripId}/budget - Update or create budget for a trip
     @PutMapping("/{tripId}/budget")
-    public Budget updateOrCreateBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
-        List<Budget> budgets = budgetRepository.findByTrip_TripId(tripId);
-        Budget budget;
-
-        if (!budgets.isEmpty()) {
-            // Update the most recent budget
-            budget = budgets.get(budgets.size() - 1);
-            // Delete any other old budgets for this trip using standard JPA
-            for (int i = 0; i < budgets.size() - 1; i++) {
-                budgetRepository.deleteById(budgets.get(i).getBudgetId());
-            }
-        } else {
-            // Create new budget
-            budget = new Budget();
-            Trip trip = tripRepository.findById(tripId).orElseThrow();
-            budget.setTrip(trip);
+    public ResponseEntity<?> updateOrCreateBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
+        try {
+            Budget budget = budgetService.updateOrCreateBudget(tripId, budgetDetails);
+            return ResponseEntity.ok(budget);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-
-        budget.setTotalBudget(budgetDetails.getTotalBudget());
-        budget.setCurrency(budgetDetails.getCurrency());
-        return budgetRepository.save(budget);
     }
 
-    // DELETE /trips/{tripId}/budget - Delete budget for a trip (using standard JPA)
+    // DELETE /trips/{tripId}/budget - Delete budget for a trip
     @DeleteMapping("/{tripId}/budget")
-    public void deleteBudget(@PathVariable int tripId) {
-        List<Budget> budgets = budgetRepository.findByTrip_TripId(tripId);
-        budgets.forEach(budget -> budgetRepository.deleteById(budget.getBudgetId()));
+    public ResponseEntity<String> deleteBudget(@PathVariable int tripId) {
+        try {
+            budgetService.deleteBudget(tripId);
+            return ResponseEntity.ok("Budget deleted successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }

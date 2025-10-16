@@ -19,6 +19,14 @@ public class ActivityDAL {
         return activityRepository.findAll();
     }
 
+    public List<Activity> getActivitiesByTripId(Long tripId) {
+        return activityRepository.findByTripId(tripId);
+    }
+
+    public List<Activity> getActivitiesWithCost(Long tripId) {
+        return activityRepository.findByTripIdAndEstimatedCostIsNotNull(tripId);
+    }
+
     public Optional<Activity> getActivityById(Long id) {
         return activityRepository.findById(id);
     }
@@ -35,4 +43,3 @@ public class ActivityDAL {
         return activityRepository.existsById(id);
     }
 }
-

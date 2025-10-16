@@ -1,8 +1,9 @@
 package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.Model.Activity;
-import com.example.tripwise_api.Repository.ActivityRepository;
+import com.example.tripwise_api.Service.ActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,66 +15,60 @@ import java.util.Optional;
 public class ActivityController {
 
     @Autowired
-    private ActivityRepository activityRepository;
+    private ActivityService activityService;
 
     // GET /api/trips/{tripId}/activities - Alle activiteiten voor een trip
     @GetMapping("/trips/{tripId}/activities")
-    public List<Activity> getActivitiesByTrip(@PathVariable Long tripId) {
-        return activityRepository.findByTripId(tripId);
+    public ResponseEntity<List<Activity>> getActivitiesByTrip(@PathVariable Long tripId) {
+        List<Activity> activities = activityService.getActivitiesByTripId(tripId);
+        return ResponseEntity.ok(activities);
     }
 
     // GET /api/activities/{id} - Specifieke activiteit
     @GetMapping("/activities/{id}")
     public ResponseEntity<Activity> getActivityById(@PathVariable Long id) {
-        Optional<Activity> activity = activityRepository.findById(id);
-        if (activity.isPresent()) {
-            return ResponseEntity.ok(activity.get());
-        }
-        return ResponseEntity.notFound().build();
+        Optional<Activity> activity = activityService.getActivityById(id);
+        return activity.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // POST /api/trips/{tripId}/activities - Nieuwe activiteit toevoegen aan trip
     @PostMapping("/trips/{tripId}/activities")
-    public Activity addActivityToTrip(@PathVariable Long tripId, @RequestBody Activity activity) {
-        activity.setTripId(tripId);  // Zorg ervoor dat tripId correct is
-        return activityRepository.save(activity);
+    public ResponseEntity<?> addActivityToTrip(@PathVariable Long tripId, @RequestBody Activity activity) {
+        try {
+            Activity savedActivity = activityService.createActivity(tripId, activity);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedActivity);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // PUT /api/activities/{id} - Update activiteit
     @PutMapping("/activities/{id}")
-    public ResponseEntity<Activity> updateActivity(@PathVariable Long id, @RequestBody Activity activityDetails) {
-        Optional<Activity> optionalActivity = activityRepository.findById(id);
-
-        if (optionalActivity.isPresent()) {
-            Activity activity = optionalActivity.get();
-
-            // Update velden
-            activity.setName(activityDetails.getName());
-            activity.setDescription(activityDetails.getDescription());
-            activity.updateTime(activityDetails.getTime());
-            activity.updateLocation(activityDetails.getLocation());
-            activity.setEstimatedCost(activityDetails.getEstimatedCost());
-
-            Activity updatedActivity = activityRepository.save(activity);
+    public ResponseEntity<?> updateActivity(@PathVariable Long id, @RequestBody Activity activityDetails) {
+        try {
+            Activity updatedActivity = activityService.updateActivity(id, activityDetails);
             return ResponseEntity.ok(updatedActivity);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-
-        return ResponseEntity.notFound().build();
     }
 
     // DELETE /api/activities/{id} - Verwijder activiteit
     @DeleteMapping("/activities/{id}")
-    public ResponseEntity<Void> deleteActivity(@PathVariable Long id) {
-        if (activityRepository.existsById(id)) {
-            activityRepository.deleteById(id);
-            return ResponseEntity.noContent().build(); // 204 No Content
+    public ResponseEntity<String> deleteActivity(@PathVariable Long id) {
+        try {
+            activityService.deleteActivity(id);
+            return ResponseEntity.ok("Activity deleted successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 
     // Extra endpoint: GET /api/trips/{tripId}/activities/with-cost
     @GetMapping("/trips/{tripId}/activities/with-cost")
-    public List<Activity> getActivitiesWithCost(@PathVariable Long tripId) {
-        return activityRepository.findByTripIdAndEstimatedCostIsNotNull(tripId);
+    public ResponseEntity<List<Activity>> getActivitiesWithCost(@PathVariable Long tripId) {
+        List<Activity> activities = activityService.getActivitiesWithCost(tripId);
+        return ResponseEntity.ok(activities);
     }
 }
