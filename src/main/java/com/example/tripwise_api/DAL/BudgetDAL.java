@@ -15,24 +15,28 @@ public class BudgetDAL {
         this.budgetRepository = budgetRepository;
     }
 
+    // Get all budgets
     public List<Budget> getAllBudgets() {
         return budgetRepository.findAll();
     }
 
+    // Get budget by its ID
     public Optional<Budget> getBudgetById(Integer id) {
         return budgetRepository.findById(id);
     }
 
+    // Save or update a budget
     public Budget saveBudget(Budget budget) {
         return budgetRepository.save(budget);
     }
 
+    // Delete budget by its ID
     public void deleteBudget(Integer id) {
         budgetRepository.deleteById(id);
     }
 
+    // Check if a budget exists by its ID
     public boolean existsById(Integer id) {
         return budgetRepository.existsById(id);
     }
 }
-
