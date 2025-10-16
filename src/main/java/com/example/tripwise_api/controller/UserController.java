@@ -54,14 +54,6 @@ public class UserController {
         }
     }
 
-    // DELETE /api/users/{id} - Delete user
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            return ResponseEntity.ok("User deleted successfully");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
+
 }
+// todo: secure the update endpoint, validation, dto

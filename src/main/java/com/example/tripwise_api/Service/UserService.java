@@ -38,10 +38,15 @@ public class UserService {
 
         user.setUsername(userDetails.getUsername());
         user.setEmail(userDetails.getEmail());
-
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
             user.setPassword(userDetails.getPassword());
         }
+        user.setBio(userDetails.getBio());
+        user.setLocation(userDetails.getLocation());
+        user.setFavoriteDestination(userDetails.getFavoriteDestination());
+        user.setTravelStyle(userDetails.getTravelStyle());
+        user.setNotifications(userDetails.getNotifications());
+        user.setCurrency(userDetails.getCurrency());
 
         return userDAL.saveUser(user);
     }

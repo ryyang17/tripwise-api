@@ -30,6 +30,24 @@ public class User {
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate = LocalDateTime.now();
 
+    @Column(length = 200)
+    private String bio;
+
+    @Column(length = 100)
+    private String location;
+
+    @Column(name = "favorite_destination", length = 100)
+    private String favoriteDestination;
+
+    @Column(name = "travel_style", length = 50)
+    private String travelStyle;
+
+    @Column(name = "notifications")
+    private Boolean notifications = true;
+
+    @Column(name = "currency", length = 10)
+    private String currency = "USD";
+
 
     public User() {
     }
@@ -80,5 +98,53 @@ public class User {
 
     public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getFavoriteDestination() {
+        return favoriteDestination;
+    }
+
+    public void setFavoriteDestination(String favoriteDestination) {
+        this.favoriteDestination = favoriteDestination;
+    }
+
+    public String getTravelStyle() {
+        return travelStyle;
+    }
+
+    public void setTravelStyle(String travelStyle) {
+        this.travelStyle = travelStyle;
+    }
+
+    public Boolean getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(Boolean notifications) {
+        this.notifications = notifications;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 }

@@ -1,0 +1,8 @@
+ALTER TABLE app_user
+  ADD COLUMN bio VARCHAR(200),
+  ADD COLUMN location VARCHAR(100),
+  ADD COLUMN favorite_destination VARCHAR(100),
+  ADD COLUMN travel_style VARCHAR(50),
+  ADD COLUMN notifications BOOLEAN DEFAULT TRUE,
+  ADD COLUMN currency VARCHAR(10) DEFAULT 'USD';
+
