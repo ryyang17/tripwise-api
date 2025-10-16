@@ -19,12 +19,14 @@ public class Trip {
     private String description;
     private String transportation;
     private LocalDateTime createdDate;
-    private boolean isActive;
+
+    // isActive is niet meer een database veld, maar een berekend veld
+    @Transient
+    private Boolean isActiveOverride; // Alleen voor intern gebruik
 
     // Constructors
     public Trip() {
         this.createdDate = LocalDateTime.now();
-        this.isActive = true;
     }
 
     public Trip(int tripId, Long userId, String tripName, LocalDate startDate, LocalDate endDate,
@@ -38,7 +40,7 @@ public class Trip {
         this.description = description;
         this.transportation = transportation;
         this.createdDate = createdDate;
-        this.isActive = isActive;
+        // isActive wordt nu automatisch berekend
     }
 
 
@@ -107,12 +109,23 @@ public class Trip {
         this.createdDate = createdDate;
     }
 
+    /**
+     * isActive wordt automatisch berekend op basis van endDate
+     */
     public boolean isActive() {
-        return isActive;
+        if (endDate == null) {
+            return true;
+        }
+
+        return !endDate.isBefore(LocalDate.now());
     }
 
+    /**
+     * Deze setter doet niets - isActive wordt automatisch berekend
+     * Maar we houden hem voor backwards compatibility met frontend
+     */
     public void setActive(boolean active) {
-        this.isActive = active;
+        // Negeer de waarde - isActive wordt automatisch berekend
     }
     public String getTransportation() {
         return transportation;

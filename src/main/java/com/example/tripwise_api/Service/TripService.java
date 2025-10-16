@@ -63,7 +63,8 @@ public class TripService {
         existingTrip.setEndDate(tripDetails.getEndDate());
         existingTrip.setDestination(tripDetails.getDestination());
         existingTrip.setDescription(tripDetails.getDescription());
-        existingTrip.setActive(tripDetails.isActive());
+        existingTrip.setTransportation(tripDetails.getTransportation());
+
 
         return tripDAL.saveTrip(existingTrip);
     }
