@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class ExpenseController {
 
     @Autowired
@@ -19,8 +20,16 @@ public class ExpenseController {
 
     // GET /trips/{tripId}/expenses - All expenses for a trip
     @GetMapping("/trips/{tripId}/expenses")
-    public ResponseEntity<List<Expense>> getExpensesByTripId(@PathVariable int tripId) {
-        List<Expense> expenses = expenseService.getExpensesByTripId(tripId);
+    public ResponseEntity<List<Expense>> getExpensesByTripId(
+            @PathVariable int tripId,
+            @RequestParam(required = false) String currency) {
+
+        List<Expense> expenses;
+        if (currency != null && !currency.isEmpty()) {
+            expenses = expenseService.getExpensesByTripIdWithCurrency(tripId, currency);
+        } else {
+            expenses = expenseService.getExpensesByTripId(tripId);
+        }
         return ResponseEntity.ok(expenses);
     }
 
@@ -34,9 +43,17 @@ public class ExpenseController {
 
     // POST /trips/{tripId}/expenses - Add new expense to trip
     @PostMapping("/trips/{tripId}/expenses")
-    public ResponseEntity<?> addExpense(@PathVariable int tripId, @RequestBody Expense expenseDetails) {
+    public ResponseEntity<?> addExpense(
+            @PathVariable int tripId,
+            @RequestBody Expense expenseDetails,
+            @RequestParam(required = false) String targetCurrency) {
         try {
-            Expense expense = expenseService.createExpense(tripId, expenseDetails);
+            Expense expense;
+            if (targetCurrency != null && !targetCurrency.isEmpty()) {
+                expense = expenseService.createExpenseWithCurrency(tripId, expenseDetails, targetCurrency);
+            } else {
+                expense = expenseService.createExpense(tripId, expenseDetails);
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(expense);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

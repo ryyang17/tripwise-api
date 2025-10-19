@@ -46,7 +46,7 @@ public class User {
     private Boolean notifications = true;
 
     @Column(name = "currency", length = 10)
-    private String currency = "USD";
+    private String currency = "EUR";
 
 
     public User() {

@@ -17,6 +17,15 @@ public class Expense {
     private String description;
     private BigDecimal amount;
 
+    @Column(name = "original_amount")
+    private BigDecimal originalAmount;
+
+    @Column(name = "currency", length = 3)
+    private String currency = "EUR";
+
+    @Column(name = "exchange_rate")
+    private BigDecimal exchangeRate = BigDecimal.ONE;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private ExpenseCategory category;
@@ -32,6 +41,7 @@ public class Expense {
         this.tripId = tripId;
         this.description = description;
         this.amount = amount;
+        this.originalAmount = amount;
         this.category = category;
         this.expenseDate = expenseDate;
         this.receiptUrl = receiptUrl;
@@ -48,6 +58,15 @@ public class Expense {
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public BigDecimal getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
 
     public ExpenseCategory getCategory() { return category; }
     public void setCategory(ExpenseCategory category) { this.category = category; }
