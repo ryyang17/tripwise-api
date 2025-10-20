@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "expense")
@@ -46,6 +47,19 @@ public class Expense {
 
     @Transient
     private Boolean splitEvenly = Boolean.FALSE; // if true, split amount evenly across splitWithUserIds + paidBy
+
+    // Additional transient fields for frontend compatibility
+    @Transient
+    private Boolean isSharedExpense = Boolean.FALSE; // indicates if this expense has shares
+
+    @Transient
+    private Integer paidById; // participant ID of who paid (for frontend compatibility)
+
+    @Transient
+    private List<Integer> splitWith; // list of participant IDs in the split (for frontend compatibility)
+
+    @Transient
+    private Map<Integer, Double> customSplits; // custom split amounts per participant ID
 
     public Expense() {}
 
@@ -103,4 +117,21 @@ public class Expense {
 
     public Boolean getSplitEvenly() { return splitEvenly; }
     public void setSplitEvenly(Boolean splitEvenly) { this.splitEvenly = splitEvenly; }
+
+    public Boolean getIsSharedExpense() { return isSharedExpense; }
+    public void setIsSharedExpense(Boolean isSharedExpense) { this.isSharedExpense = isSharedExpense; }
+
+    public Integer getPaidById() { return paidById; }
+    public void setPaidById(Integer paidById) { this.paidById = paidById; }
+
+    public List<Integer> getSplitWith() { return splitWith; }
+    public void setSplitWith(List<Integer> splitWith) { this.splitWith = splitWith; }
+
+    public Map<Integer, Double> getCustomSplits() { return customSplits; }
+    public void setCustomSplits(Map<Integer, Double> customSplits) { this.customSplits = customSplits; }
+
+    // Convenience method for frontend compatibility
+    public boolean isSharedExpense() {
+        return isSharedExpense != null && isSharedExpense;
+    }
 }

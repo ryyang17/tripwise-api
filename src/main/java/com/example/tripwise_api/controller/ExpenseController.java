@@ -95,4 +95,18 @@ public class ExpenseController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // PUT /trips/{tripId}/shared-expenses/{expenseId} - Update shared expense
+    @PutMapping("/trips/{tripId}/shared-expenses/{expenseId}")
+    public ResponseEntity<?> updateSharedExpense(
+            @PathVariable int tripId,
+            @PathVariable int expenseId,
+            @RequestBody SharedExpenseRequest sharedExpenseData) {
+        try {
+            Expense expense = expenseService.updateSharedExpense(tripId, expenseId, sharedExpenseData);
+            return ResponseEntity.ok(expense);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
 }

@@ -45,7 +45,9 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public List<Expense> getExpensesByTripId(int tripId) {
-        return expenseDAL.getExpensesByTripId(tripId);
+        List<Expense> expenses = expenseDAL.getExpensesByTripId(tripId);
+        populateSharedExpenseFields(expenses);
+        return expenses;
     }
 
 
@@ -61,12 +63,17 @@ public class ExpenseService {
             }
         }
 
+        populateSharedExpenseFields(expenses);
         return expenses;
     }
 
     @Transactional(readOnly = true)
     public Optional<Expense> getExpenseById(int id) {
-        return expenseDAL.getExpenseById(id);
+        Optional<Expense> expenseOpt = expenseDAL.getExpenseById(id);
+        if (expenseOpt.isPresent()) {
+            populateSharedExpenseFields(expenseOpt.get());
+        }
+        return expenseOpt;
     }
 
     public Expense createExpense(int tripId, Expense expenseDetails) {
@@ -282,7 +289,10 @@ public class ExpenseService {
         Expense saved = expenseDAL.saveExpense(expense);
 
         // Create shares for participants using participant IDs
-        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly());
+        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly(), request.getCustomSplits());
+
+        // Populate shared expense fields for frontend compatibility
+        populateSharedExpenseFields(saved);
 
         return saved;
     }
@@ -290,7 +300,7 @@ public class ExpenseService {
     /**
      * Create ExpenseShare rows for participants based on participant IDs
      */
-    private void createSharesForParticipants(Expense savedExpense, int paidByParticipantId, List<Integer> splitWithParticipantIds, boolean splitEvenly) {
+    private void createSharesForParticipants(Expense savedExpense, int paidByParticipantId, List<Integer> splitWithParticipantIds, boolean splitEvenly, Map<Integer, Double> customSplits) {
         if (splitWithParticipantIds == null || splitWithParticipantIds.isEmpty()) {
             return;
         }
@@ -316,15 +326,179 @@ public class ExpenseService {
         int participantCount = participantIds.size();
         if (participantCount == 0) return;
 
-        // Calculate share amount (only support even split for now)
-        BigDecimal total = savedExpense.getAmount() != null ? savedExpense.getAmount() : BigDecimal.ZERO;
-        BigDecimal shareAmount = total.divide(new BigDecimal(participantCount), 2, RoundingMode.HALF_UP);
+        // Create expense shares using custom splits if provided, otherwise split evenly
+        if (!splitEvenly && customSplits != null && !customSplits.isEmpty()) {
+            // Custom split: use provided amounts
+            BigDecimal totalCustomAmount = BigDecimal.ZERO;
 
-        // Create expense shares using user IDs
-        for (Integer participantId : participantIds) {
-            Long userId = participantIdToUserIdMap.get(participantId);
-            ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);
-            expenseShareDAL.saveShare(share);
+            for (Integer participantId : participantIds) {
+                Double customAmount = customSplits.get(participantId);
+                if (customAmount != null && customAmount > 0) {
+                    BigDecimal shareAmount = BigDecimal.valueOf(customAmount);
+                    totalCustomAmount = totalCustomAmount.add(shareAmount);
+
+                    Long userId = participantIdToUserIdMap.get(participantId);
+                    ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);
+                    expenseShareDAL.saveShare(share);
+                }
+            }
+
+            // Validate that custom splits add up to total expense amount (with small tolerance)
+            BigDecimal totalExpense = savedExpense.getAmount() != null ? savedExpense.getAmount() : BigDecimal.ZERO;
+            BigDecimal difference = totalExpense.subtract(totalCustomAmount).abs();
+            if (difference.compareTo(new BigDecimal("0.01")) > 0) {
+                throw new IllegalArgumentException("Custom split amounts (" + totalCustomAmount + ") do not add up to total expense amount (" + totalExpense + ")");
+            }
+        } else {
+            // Even split: divide amount evenly across participants
+            BigDecimal total = savedExpense.getAmount() != null ? savedExpense.getAmount() : BigDecimal.ZERO;
+            BigDecimal shareAmount = total.divide(new BigDecimal(participantCount), 2, RoundingMode.HALF_UP);
+
+            for (Integer participantId : participantIds) {
+                Long userId = participantIdToUserIdMap.get(participantId);
+                ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);
+                expenseShareDAL.saveShare(share);
+            }
+        }
+    }
+
+    /**
+     * Update a shared expense from SharedExpenseRequest DTO using participant IDs
+     */
+    public Expense updateSharedExpense(int tripId, int expenseId, SharedExpenseRequest request) {
+        // Validate required fields
+        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("Description is required");
+        }
+        if (request.getAmount() <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than 0");
+        }
+        if (request.getSplitWithParticipantIds() == null || request.getSplitWithParticipantIds().isEmpty()) {
+            throw new IllegalArgumentException("Split participants are required");
+        }
+
+        // Get existing expense and validate
+        Expense existingExpense = expenseDAL.getExpenseById(expenseId)
+                .orElseThrow(() -> new IllegalArgumentException("Expense not found with id: " + expenseId));
+
+        if (existingExpense.getTripId() != tripId) {
+            throw new IllegalArgumentException("Expense does not belong to this trip");
+        }
+
+        // Get the expense category
+        ExpenseCategory category = expenseCategoryService.getCategoryById((long) request.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + request.getCategoryId()));
+
+        // Get payer participant and validate
+        TripParticipant payer = tripParticipantService.getParticipantById(request.getPaidByParticipantId())
+                .orElseThrow(() -> new IllegalArgumentException("Payer participant not found with id: " + request.getPaidByParticipantId()));
+
+        // Validate that payer belongs to this trip
+        if (!payer.getTripId().equals(tripId)) {
+            throw new IllegalArgumentException("Payer participant does not belong to this trip");
+        }
+
+        // Update expense fields
+        existingExpense.setDescription(request.getDescription());
+        existingExpense.setAmount(BigDecimal.valueOf(request.getAmount()));
+        existingExpense.setOriginalAmount(BigDecimal.valueOf(request.getAmount()));
+        existingExpense.setCurrency(request.getCurrency() != null ? request.getCurrency() : "EUR");
+        existingExpense.setExchangeRate(BigDecimal.ONE);
+        existingExpense.setCategory(category);
+        existingExpense.setPaidBy(payer.getUserId()); // Store user ID in expense
+
+        // Parse expense date
+        if (request.getExpenseDate() != null && !request.getExpenseDate().trim().isEmpty()) {
+            try {
+                LocalDate expenseDate = LocalDate.parse(request.getExpenseDate(), DateTimeFormatter.ISO_LOCAL_DATE);
+                existingExpense.setExpenseDate(expenseDate);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid expense date format. Expected YYYY-MM-DD");
+            }
+        }
+
+        // Save the updated expense
+        Expense saved = expenseDAL.saveExpense(existingExpense);
+
+        // Remove existing shares and create new ones
+        expenseShareDAL.deleteSharesByExpenseId(expenseId);
+        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly(), request.getCustomSplits());
+
+        // Populate shared expense fields for frontend compatibility
+        populateSharedExpenseFields(saved);
+
+        return saved;
+    }
+
+    /**
+     * Populate shared expense fields for frontend compatibility
+     */
+    private void populateSharedExpenseFields(Expense expense) {
+        // Check if this expense has shares
+        List<ExpenseShare> shares = expenseShareDAL.getSharesByExpenseId(expense.getExpenseId());
+
+        if (shares != null && !shares.isEmpty()) {
+            expense.setIsSharedExpense(true);
+
+            // Convert user IDs back to participant IDs for frontend compatibility
+            List<Integer> participantIds = new ArrayList<>();
+            Map<Integer, Double> customSplits = new HashMap<>();
+            Integer payerParticipantId = null;
+
+            // Get all participants for this trip to create user->participant mapping
+            List<TripParticipant> tripParticipants = tripParticipantService.getParticipantsByTripId(expense.getTripId());
+            Map<Long, Integer> userIdToParticipantIdMap = new HashMap<>();
+
+            for (TripParticipant participant : tripParticipants) {
+                userIdToParticipantIdMap.put(participant.getUserId(), participant.getId());
+            }
+
+            // Check if all shares have the same amount (even split) or different amounts (custom split)
+            BigDecimal firstShareAmount = null;
+            boolean isEvenSplit = true;
+
+            // Convert shares to participant IDs and build custom splits map
+            for (ExpenseShare share : shares) {
+                Integer participantId = userIdToParticipantIdMap.get(share.getUserId());
+                if (participantId != null) {
+                    participantIds.add(participantId);
+                    customSplits.put(participantId, share.getAmount().doubleValue());
+
+                    // Check if this is the payer
+                    if (expense.getPaidBy() != null && expense.getPaidBy().equals(share.getUserId())) {
+                        payerParticipantId = participantId;
+                    }
+
+                    // Check if all amounts are the same (even split)
+                    if (firstShareAmount == null) {
+                        firstShareAmount = share.getAmount();
+                    } else if (!firstShareAmount.equals(share.getAmount())) {
+                        isEvenSplit = false;
+                    }
+                }
+            }
+
+            expense.setPaidById(payerParticipantId);
+            expense.setSplitWith(participantIds);
+            expense.setSplitEvenly(isEvenSplit);
+
+            // Always set custom splits - frontend can use this for editing
+            expense.setCustomSplits(customSplits);
+        } else {
+            expense.setIsSharedExpense(false);
+            expense.setPaidById(null);
+            expense.setSplitWith(new ArrayList<>());
+            expense.setSplitEvenly(true);
+            expense.setCustomSplits(new HashMap<>());
+        }
+    }
+
+    /**
+     * Populate shared expense fields for a list of expenses
+     */
+    private void populateSharedExpenseFields(List<Expense> expenses) {
+        for (Expense expense : expenses) {
+            populateSharedExpenseFields(expense);
         }
     }
 }

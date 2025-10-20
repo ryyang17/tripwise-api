@@ -1,6 +1,7 @@
 package com.example.tripwise_api.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public class SharedExpenseRequest {
     private String description;
@@ -12,11 +13,15 @@ public class SharedExpenseRequest {
     private List<Integer> splitWithParticipantIds; // Changed from splitWith to splitWithParticipantIds
     private boolean splitEvenly;
 
+    // New field for custom splits: participantId -> amount
+    private Map<Integer, Double> customSplits;
+
     // Constructors
     public SharedExpenseRequest() {}
 
     public SharedExpenseRequest(String description, double amount, String currency, int categoryId,
-                               String expenseDate, int paidByParticipantId, List<Integer> splitWithParticipantIds, boolean splitEvenly) {
+                               String expenseDate, int paidByParticipantId, List<Integer> splitWithParticipantIds, boolean splitEvenly,
+                               Map<Integer, Double> customSplits) {
         this.description = description;
         this.amount = amount;
         this.currency = currency;
@@ -25,6 +30,7 @@ public class SharedExpenseRequest {
         this.paidByParticipantId = paidByParticipantId;
         this.splitWithParticipantIds = splitWithParticipantIds;
         this.splitEvenly = splitEvenly;
+        this.customSplits = customSplits;
     }
 
     // Getters and Setters
@@ -90,5 +96,13 @@ public class SharedExpenseRequest {
 
     public void setSplitEvenly(boolean splitEvenly) {
         this.splitEvenly = splitEvenly;
+    }
+
+    public Map<Integer, Double> getCustomSplits() {
+        return customSplits;
+    }
+
+    public void setCustomSplits(Map<Integer, Double> customSplits) {
+        this.customSplits = customSplits;
     }
 }
