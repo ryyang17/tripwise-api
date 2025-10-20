@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "expense")
@@ -34,6 +35,17 @@ public class Expense {
     private LocalDateTime createdDate = LocalDateTime.now();
     private String receiptUrl;
     private boolean isValidated = false;
+
+    // New: which user paid this expense (app_user.user_id)
+    @Column(name = "paid_by")
+    private Long paidBy;
+
+    // Transient helper fields used when creating/updating expenses via API
+    @Transient
+    private List<Long> splitWithUserIds; // list of user ids participating in split
+
+    @Transient
+    private Boolean splitEvenly = Boolean.FALSE; // if true, split amount evenly across splitWithUserIds + paidBy
 
     public Expense() {}
 
@@ -82,4 +94,13 @@ public class Expense {
 
     public boolean isValidated() { return isValidated; }
     public void setValidated(boolean validated) { isValidated = validated; }
+
+    public Long getPaidBy() { return paidBy; }
+    public void setPaidBy(Long paidBy) { this.paidBy = paidBy; }
+
+    public List<Long> getSplitWithUserIds() { return splitWithUserIds; }
+    public void setSplitWithUserIds(List<Long> splitWithUserIds) { this.splitWithUserIds = splitWithUserIds; }
+
+    public Boolean getSplitEvenly() { return splitEvenly; }
+    public void setSplitEvenly(Boolean splitEvenly) { this.splitEvenly = splitEvenly; }
 }

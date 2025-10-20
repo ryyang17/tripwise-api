@@ -2,6 +2,7 @@ package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.Model.Expense;
 import com.example.tripwise_api.Service.ExpenseService;
+import com.example.tripwise_api.dto.SharedExpenseRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,6 +80,19 @@ public class ExpenseController {
             return ResponseEntity.ok("Expense deleted successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // POST /trips/{tripId}/shared-expenses - Add new shared expense
+    @PostMapping("/trips/{tripId}/shared-expenses")
+    public ResponseEntity<?> addSharedExpense(
+            @PathVariable int tripId,
+            @RequestBody SharedExpenseRequest sharedExpenseData) {
+        try {
+            Expense expense = expenseService.createSharedExpense(tripId, sharedExpenseData);
+            return ResponseEntity.status(HttpStatus.CREATED).body(expense);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

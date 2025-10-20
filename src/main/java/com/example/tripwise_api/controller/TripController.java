@@ -1,7 +1,9 @@
 package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.Model.Trip;
+import com.example.tripwise_api.Model.TripParticipant;
 import com.example.tripwise_api.Service.TripService;
+import com.example.tripwise_api.Service.TripParticipantService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,9 +14,11 @@ import java.util.Optional;
 public class TripController {
 
     private final TripService tripService;
+    private final TripParticipantService tripParticipantService;
 
-    public TripController(TripService tripService) {
+    public TripController(TripService tripService, TripParticipantService tripParticipantService) {
         this.tripService = tripService;
+        this.tripParticipantService = tripParticipantService;
     }
 
     // GET /api/trips - Alle trips
@@ -52,5 +56,26 @@ public class TripController {
     @DeleteMapping("/{id}")
     public void deleteTrip(@PathVariable Integer id) {
         tripService.deleteTrip(id);
+    }
+
+    // Participants endpoints
+
+    // GET /api/trips/{id}/participants - list participants of a trip
+    @GetMapping("/{id}/participants")
+    public List<TripParticipant> getParticipants(@PathVariable Integer id) {
+        return tripParticipantService.getParticipantsByTripId(id);
+    }
+
+    // POST /api/trips/{id}/participants - add participant to the trip
+    @PostMapping("/{id}/participants")
+    public TripParticipant addParticipant(@PathVariable Integer id, @RequestBody TripParticipant participant) {
+        participant.setTripId(id);
+        return tripParticipantService.addParticipant(participant);
+    }
+
+    // DELETE /api/trips/participants/{participantId} - remove participant
+    @DeleteMapping("/participants/{participantId}")
+    public void removeParticipant(@PathVariable Integer participantId) {
+        tripParticipantService.removeParticipant(participantId);
     }
 }
