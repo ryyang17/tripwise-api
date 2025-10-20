@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/trips")
+@CrossOrigin(origins = "*")
 public class BudgetController {
 
     @Autowired

@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/trips")
+@CrossOrigin(origins = "*")
 public class TripController {
 
     private final TripService tripService;

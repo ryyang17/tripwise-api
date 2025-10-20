@@ -8,20 +8,28 @@ COPY build.gradle settings.gradle gradlew ./
 COPY gradle ./gradle
 
 # Download dependencies (dit versnelt builds later)
-RUN ./gradlew dependencies || return 0
+RUN ./gradlew dependencies --no-daemon || return 0
 
 # Kopieer volledige project
 COPY . .
 
 # Build de jar (tests overslaan voor snelheid, haal -x test weg als je wel tests wil draaien)
-RUN ./gradlew build -x test
+RUN ./gradlew bootJar --no-daemon -x test
 
 # -------- Stage 2: Run --------
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # Kopieer jar van build stage
 COPY --from=builder /app/build/libs/*.jar app.jar
 
+# Add PostgreSQL client for debugging (optional)
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
