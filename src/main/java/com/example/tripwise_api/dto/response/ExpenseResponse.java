@@ -1,3 +1,7 @@
+package com.example.tripwise_api.dto.response;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 
 public class ExpenseResponse {
     private Long id;
