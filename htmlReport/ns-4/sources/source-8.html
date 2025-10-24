@@ -1,0 +1,194 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tripwise_api.Service</a>
+</div>
+
+<h1>Coverage Summary for Class: UserService (com.example.tripwise_api.Service)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserService</td>
+<td class="coverageStat">
+  <span class="percent">
+    16,7%
+  </span>
+  <span class="absValue">
+    (1/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    4,8%
+  </span>
+  <span class="absValue">
+    (1/21)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">UserService$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    16,7%
+  </span>
+  <span class="absValue">
+    (1/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    4,8%
+  </span>
+  <span class="absValue">
+    (1/21)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tripwise_api.Service;
+&nbsp;
+&nbsp;import com.example.tripwise_api.Model.User;
+&nbsp;import com.example.tripwise_api.DAL.UserDAL;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Service
+&nbsp;@Transactional
+<b class="fc">&nbsp;public class UserService {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private UserDAL userDAL;
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;User&gt; getAllUsers() {
+<b class="nc">&nbsp;        return userDAL.getAllUsers();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;User&gt; getUserById(Long id) {
+<b class="nc">&nbsp;        return userDAL.getUserById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public User createUser(User user) {
+<b class="nc">&nbsp;        user.setCreatedDate(LocalDateTime.now());</b>
+<b class="nc">&nbsp;        return userDAL.saveUser(user);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public User updateUser(Long id, User userDetails) {
+<b class="nc">&nbsp;        User user = userDAL.getUserById(id)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;User not found with id: &quot; + id));</b>
+&nbsp;
+<b class="nc">&nbsp;        user.setUsername(userDetails.getUsername());</b>
+<b class="nc">&nbsp;        user.setEmail(userDetails.getEmail());</b>
+<b class="nc">&nbsp;        if (userDetails.getPassword() != null &amp;&amp; !userDetails.getPassword().isEmpty()) {</b>
+<b class="nc">&nbsp;            user.setPassword(userDetails.getPassword());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        user.setBio(userDetails.getBio());</b>
+<b class="nc">&nbsp;        user.setLocation(userDetails.getLocation());</b>
+<b class="nc">&nbsp;        user.setFavoriteDestination(userDetails.getFavoriteDestination());</b>
+<b class="nc">&nbsp;        user.setTravelStyle(userDetails.getTravelStyle());</b>
+<b class="nc">&nbsp;        user.setNotifications(userDetails.getNotifications());</b>
+<b class="nc">&nbsp;        user.setCurrency(userDetails.getCurrency());</b>
+&nbsp;
+<b class="nc">&nbsp;        return userDAL.saveUser(user);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteUser(Long id) {
+<b class="nc">&nbsp;        if (!userDAL.existsById(id)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;User not found with id: &quot; + id);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        userDAL.deleteUser(id);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-24 13:39</div>
+</div>
+</body>
+</html>

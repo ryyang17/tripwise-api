@@ -1,0 +1,145 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ExpenseDAL</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tripwise_api.DAL</a>
+</div>
+
+<h1>Coverage Summary for Class: ExpenseDAL (com.example.tripwise_api.DAL)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ExpenseDAL</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    14,3%
+  </span>
+  <span class="absValue">
+    (1/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (2/8)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tripwise_api.DAL;
+&nbsp;
+&nbsp;import com.example.tripwise_api.Model.Expense;
+&nbsp;import com.example.tripwise_api.Repository.ExpenseRepository;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Component
+&nbsp;public class ExpenseDAL {
+&nbsp;    private final ExpenseRepository expenseRepository;
+&nbsp;
+<b class="fc">&nbsp;    public ExpenseDAL(ExpenseRepository expenseRepository) {</b>
+<b class="fc">&nbsp;        this.expenseRepository = expenseRepository;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Expense&gt; getAllExpenses() {
+<b class="nc">&nbsp;        return expenseRepository.findAll();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Expense&gt; getExpensesByTripId(int tripId) {
+<b class="nc">&nbsp;        return expenseRepository.findByTripId(tripId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Optional&lt;Expense&gt; getExpenseById(Integer id) {
+<b class="nc">&nbsp;        return expenseRepository.findById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Expense saveExpense(Expense expense) {
+<b class="nc">&nbsp;        return expenseRepository.save(expense);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteExpense(Integer id) {
+<b class="nc">&nbsp;        expenseRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean existsById(Integer id) {
+<b class="nc">&nbsp;        return expenseRepository.existsById(id);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-24 13:39</div>
+</div>
+</body>
+</html>

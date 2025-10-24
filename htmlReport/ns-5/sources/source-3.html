@@ -1,0 +1,208 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CurrencyController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tripwise_api.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: CurrencyController (com.example.tripwise_api.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CurrencyController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    20%
+  </span>
+  <span class="absValue">
+    (1/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2,6%
+  </span>
+  <span class="absValue">
+    (1/39)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tripwise_api.controller;
+&nbsp;
+&nbsp;import com.example.tripwise_api.Service.CurrencyService;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.HashMap;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/currency&quot;)
+&nbsp;@CrossOrigin(origins = &quot;*&quot;)
+<b class="fc">&nbsp;public class CurrencyController {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private CurrencyService currencyService;
+&nbsp;
+&nbsp;
+&nbsp;     // Get exchange rate between two currencies
+&nbsp;
+&nbsp;    @GetMapping(&quot;/exchange-rate&quot;)
+&nbsp;    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; getExchangeRate(
+&nbsp;            @RequestParam String from,
+&nbsp;            @RequestParam String to) {
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            BigDecimal rate = currencyService.getExchangeRate(from.toUpperCase(), to.toUpperCase());</b>
+&nbsp;
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            response.put(&quot;from&quot;, from.toUpperCase());</b>
+<b class="nc">&nbsp;            response.put(&quot;to&quot;, to.toUpperCase());</b>
+<b class="nc">&nbsp;            response.put(&quot;rate&quot;, rate);</b>
+<b class="nc">&nbsp;            response.put(&quot;success&quot;, true);</b>
+&nbsp;
+<b class="nc">&nbsp;            return ResponseEntity.ok(response);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; errorResponse = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            errorResponse.put(&quot;success&quot;, false);</b>
+<b class="nc">&nbsp;            errorResponse.put(&quot;error&quot;, &quot;Failed to get exchange rate: &quot; + e.getMessage());</b>
+&nbsp;
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(errorResponse);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;     // Convert amount between currencies
+&nbsp;
+&nbsp;    @PostMapping(&quot;/convert&quot;)
+&nbsp;    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; convertCurrency(@RequestBody Map&lt;String, Object&gt; request) {
+&nbsp;        try {
+<b class="nc">&nbsp;            BigDecimal amount = new BigDecimal(request.get(&quot;amount&quot;).toString());</b>
+<b class="nc">&nbsp;            String fromCurrency = request.get(&quot;from&quot;).toString().toUpperCase();</b>
+<b class="nc">&nbsp;            String toCurrency = request.get(&quot;to&quot;).toString().toUpperCase();</b>
+&nbsp;
+<b class="nc">&nbsp;            BigDecimal convertedAmount = currencyService.convertCurrency(amount, fromCurrency, toCurrency);</b>
+<b class="nc">&nbsp;            BigDecimal exchangeRate = currencyService.getExchangeRate(fromCurrency, toCurrency);</b>
+&nbsp;
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            response.put(&quot;originalAmount&quot;, amount);</b>
+<b class="nc">&nbsp;            response.put(&quot;convertedAmount&quot;, convertedAmount);</b>
+<b class="nc">&nbsp;            response.put(&quot;fromCurrency&quot;, fromCurrency);</b>
+<b class="nc">&nbsp;            response.put(&quot;toCurrency&quot;, toCurrency);</b>
+<b class="nc">&nbsp;            response.put(&quot;exchangeRate&quot;, exchangeRate);</b>
+<b class="nc">&nbsp;            response.put(&quot;success&quot;, true);</b>
+&nbsp;
+<b class="nc">&nbsp;            return ResponseEntity.ok(response);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            Map&lt;String, Object&gt; errorResponse = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            errorResponse.put(&quot;success&quot;, false);</b>
+<b class="nc">&nbsp;            errorResponse.put(&quot;error&quot;, &quot;Failed to convert currency: &quot; + e.getMessage());</b>
+&nbsp;
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(errorResponse);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;     // Get list of supported currencies
+&nbsp;
+&nbsp;    @GetMapping(&quot;/supported&quot;)
+&nbsp;    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; getSupportedCurrencies() {
+<b class="nc">&nbsp;        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        response.put(&quot;currencies&quot;, currencyService.getSupportedCurrencies());</b>
+<b class="nc">&nbsp;        response.put(&quot;success&quot;, true);</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.ok(response);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;     // Validate currency code
+&nbsp;
+&nbsp;    @GetMapping(&quot;/validate/{currencyCode}&quot;)
+&nbsp;    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; validateCurrency(@PathVariable String currencyCode) {
+<b class="nc">&nbsp;        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        boolean isValid = currencyService.isCurrencySupported(currencyCode);</b>
+&nbsp;
+<b class="nc">&nbsp;        response.put(&quot;currencyCode&quot;, currencyCode.toUpperCase());</b>
+<b class="nc">&nbsp;        response.put(&quot;isValid&quot;, isValid);</b>
+<b class="nc">&nbsp;        response.put(&quot;success&quot;, true);</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.ok(response);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-24 13:39</div>
+</div>
+</body>
+</html>

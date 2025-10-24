@@ -1,0 +1,228 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ExpenseController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tripwise_api.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: ExpenseController (com.example.tripwise_api.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ExpenseController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    12,5%
+  </span>
+  <span class="absValue">
+    (1/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    4%
+  </span>
+  <span class="absValue">
+    (1/25)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tripwise_api.controller;
+&nbsp;
+&nbsp;import com.example.tripwise_api.Model.Expense;
+&nbsp;import com.example.tripwise_api.Service.ExpenseService;
+&nbsp;import com.example.tripwise_api.dto.SharedExpenseRequest;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api&quot;)
+&nbsp;@CrossOrigin(origins = &quot;*&quot;)
+<b class="fc">&nbsp;public class ExpenseController {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ExpenseService expenseService;
+&nbsp;
+&nbsp;    // GET /trips/{tripId}/expenses - All expenses for a trip
+&nbsp;    @GetMapping(&quot;/trips/{tripId}/expenses&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Expense&gt;&gt; getExpensesByTripId(
+&nbsp;            @PathVariable int tripId,
+&nbsp;            @RequestParam(required = false) String currency) {
+&nbsp;
+&nbsp;        List&lt;Expense&gt; expenses;
+<b class="nc">&nbsp;        if (currency != null &amp;&amp; !currency.isEmpty()) {</b>
+<b class="nc">&nbsp;            expenses = expenseService.getExpensesByTripIdWithCurrency(tripId, currency);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expenses = expenseService.getExpensesByTripId(tripId);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return ResponseEntity.ok(expenses);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET /expenses/{id} - Get expense detail
+&nbsp;    @GetMapping(&quot;/expenses/{id}&quot;)
+&nbsp;    public ResponseEntity&lt;Expense&gt; getExpenseById(@PathVariable int id) {
+<b class="nc">&nbsp;        Optional&lt;Expense&gt; expense = expenseService.getExpenseById(id);</b>
+<b class="nc">&nbsp;        return expense.map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST /trips/{tripId}/expenses - Add new expense to trip
+&nbsp;    @PostMapping(&quot;/trips/{tripId}/expenses&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; addExpense(
+&nbsp;            @PathVariable int tripId,
+&nbsp;            @RequestBody Expense expenseDetails,
+&nbsp;            @RequestParam(required = false) String targetCurrency) {
+&nbsp;        try {
+&nbsp;            Expense expense;
+<b class="nc">&nbsp;            if (targetCurrency != null &amp;&amp; !targetCurrency.isEmpty()) {</b>
+<b class="nc">&nbsp;                expense = expenseService.createExpenseWithCurrency(tripId, expenseDetails, targetCurrency);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                expense = expenseService.createExpense(tripId, expenseDetails);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CREATED).body(expense);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // PUT /expenses/{id} - Update expense
+&nbsp;    @PutMapping(&quot;/expenses/{id}&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; updateExpense(@PathVariable int id, @RequestBody Expense expenseDetails) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Expense expense = expenseService.updateExpense(id, expenseDetails);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(expense);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // DELETE /expenses/{id} - Delete expense
+&nbsp;    @DeleteMapping(&quot;/expenses/{id}&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; deleteExpense(@PathVariable int id) {
+&nbsp;        try {
+<b class="nc">&nbsp;            expenseService.deleteExpense(id);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(&quot;Expense deleted successfully&quot;);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST /trips/{tripId}/shared-expenses - Add new shared expense
+&nbsp;    @PostMapping(&quot;/trips/{tripId}/shared-expenses&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; addSharedExpense(
+&nbsp;            @PathVariable int tripId,
+&nbsp;            @RequestBody SharedExpenseRequest sharedExpenseData) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Expense expense = expenseService.createSharedExpense(tripId, sharedExpenseData);</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CREATED).body(expense);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // PUT /trips/{tripId}/shared-expenses/{expenseId} - Update shared expense
+&nbsp;    @PutMapping(&quot;/trips/{tripId}/shared-expenses/{expenseId}&quot;)
+&nbsp;    public ResponseEntity&lt;?&gt; updateSharedExpense(
+&nbsp;            @PathVariable int tripId,
+&nbsp;            @PathVariable int expenseId,
+&nbsp;            @RequestBody SharedExpenseRequest sharedExpenseData) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Expense expense = expenseService.updateSharedExpense(tripId, expenseId, sharedExpenseData);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(expense);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-24 13:39</div>
+</div>
+</body>
+</html>

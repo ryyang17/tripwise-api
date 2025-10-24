@@ -1,0 +1,638 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ExpenseService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tripwise_api.Service</a>
+</div>
+
+<h1>Coverage Summary for Class: ExpenseService (com.example.tripwise_api.Service)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ExpenseService</td>
+<td class="coverageStat">
+  <span class="percent">
+    6,2%
+  </span>
+  <span class="absValue">
+    (1/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/132)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0,5%
+  </span>
+  <span class="absValue">
+    (1/219)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ExpenseService$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    6,2%
+  </span>
+  <span class="absValue">
+    (1/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/132)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0,5%
+  </span>
+  <span class="absValue">
+    (1/219)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tripwise_api.Service;
+&nbsp;
+&nbsp;import com.example.tripwise_api.Model.Expense;
+&nbsp;import com.example.tripwise_api.Model.ExpenseShare;
+&nbsp;import com.example.tripwise_api.Model.ExpenseCategory;
+&nbsp;import com.example.tripwise_api.Model.TripParticipant;
+&nbsp;import com.example.tripwise_api.DAL.ExpenseDAL;
+&nbsp;import com.example.tripwise_api.DAL.ExpenseShareDAL;
+&nbsp;import com.example.tripwise_api.Service.ExpenseCategoryService;
+&nbsp;import com.example.tripwise_api.Service.TripParticipantService;
+&nbsp;import com.example.tripwise_api.dto.SharedExpenseRequest;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.math.RoundingMode;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.format.DateTimeFormatter;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;@Service
+&nbsp;@Transactional
+<b class="fc">&nbsp;public class ExpenseService {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ExpenseDAL expenseDAL;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private CurrencyService currencyService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ExpenseShareDAL expenseShareDAL;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private ExpenseCategoryService expenseCategoryService;
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    private TripParticipantService tripParticipantService;
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Expense&gt; getAllExpenses() {
+<b class="nc">&nbsp;        return expenseDAL.getAllExpenses();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Expense&gt; getExpensesByTripId(int tripId) {
+<b class="nc">&nbsp;        List&lt;Expense&gt; expenses = expenseDAL.getExpensesByTripId(tripId);</b>
+<b class="nc">&nbsp;        populateSharedExpenseFields(expenses);</b>
+<b class="nc">&nbsp;        return expenses;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;     // Get expenses by trip ID with currency conversion to user&#39;s preferred currency
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Expense&gt; getExpensesByTripIdWithCurrency(int tripId, String targetCurrency) {
+<b class="nc">&nbsp;        List&lt;Expense&gt; expenses = expenseDAL.getExpensesByTripId(tripId);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (targetCurrency != null &amp;&amp; !targetCurrency.isEmpty()) {</b>
+<b class="nc">&nbsp;            for (Expense expense : expenses) {</b>
+<b class="nc">&nbsp;                convertExpenseCurrency(expense, targetCurrency);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        populateSharedExpenseFields(expenses);</b>
+<b class="nc">&nbsp;        return expenses;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;Expense&gt; getExpenseById(int id) {
+<b class="nc">&nbsp;        Optional&lt;Expense&gt; expenseOpt = expenseDAL.getExpenseById(id);</b>
+<b class="nc">&nbsp;        if (expenseOpt.isPresent()) {</b>
+<b class="nc">&nbsp;            populateSharedExpenseFields(expenseOpt.get());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return expenseOpt;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Expense createExpense(int tripId, Expense expenseDetails) {
+<b class="nc">&nbsp;        Expense expense = new Expense();</b>
+<b class="nc">&nbsp;        expense.setTripId(tripId);</b>
+<b class="nc">&nbsp;        expense.setDescription(expenseDetails.getDescription());</b>
+&nbsp;
+&nbsp;        // Handle currency conversion
+<b class="nc">&nbsp;        String expenseCurrency = expenseDetails.getCurrency() != null ?</b>
+<b class="nc">&nbsp;            expenseDetails.getCurrency() : &quot;EUR&quot;;</b>
+<b class="nc">&nbsp;        BigDecimal originalAmount = expenseDetails.getOriginalAmount() != null ?</b>
+<b class="nc">&nbsp;            expenseDetails.getOriginalAmount() : expenseDetails.getAmount();</b>
+&nbsp;
+<b class="nc">&nbsp;        expense.setOriginalAmount(originalAmount);</b>
+<b class="nc">&nbsp;        expense.setCurrency(expenseCurrency);</b>
+&nbsp;
+&nbsp;        // If amount is different from original amount, it means conversion was already done
+&nbsp;        // Otherwise, use the original amount as the amount
+<b class="nc">&nbsp;        if (expenseDetails.getAmount().equals(originalAmount)) {</b>
+<b class="nc">&nbsp;            expense.setAmount(originalAmount);</b>
+<b class="nc">&nbsp;            expense.setExchangeRate(BigDecimal.ONE);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expense.setAmount(expenseDetails.getAmount());</b>
+&nbsp;            // Calculate exchange rate using RoundingMode enum
+<b class="nc">&nbsp;            BigDecimal rate = expenseDetails.getAmount().divide(originalAmount, 6, RoundingMode.HALF_UP);</b>
+<b class="nc">&nbsp;            expense.setExchangeRate(rate);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        expense.setCategory(expenseDetails.getCategory());</b>
+<b class="nc">&nbsp;        expense.setExpenseDate(expenseDetails.getExpenseDate());</b>
+<b class="nc">&nbsp;        expense.setReceiptUrl(expenseDetails.getReceiptUrl());</b>
+<b class="nc">&nbsp;        expense.setValidated(expenseDetails.isValidated());</b>
+&nbsp;
+&nbsp;        // Paid-by and split metadata (transient fields) are copied into persistent paidBy
+<b class="nc">&nbsp;        expense.setPaidBy(expenseDetails.getPaidBy());</b>
+&nbsp;
+<b class="nc">&nbsp;        Expense saved = expenseDAL.saveExpense(expense);</b>
+&nbsp;
+&nbsp;        // After saving the expense, create ExpenseShare rows if requested
+<b class="nc">&nbsp;        createSharesForExpense(saved, expenseDetails);</b>
+&nbsp;
+<b class="nc">&nbsp;        return saved;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;     //Create expense with automatic currency conversion
+&nbsp;
+&nbsp;    public Expense createExpenseWithCurrency(int tripId, Expense expenseDetails, String targetCurrency) {
+&nbsp;        // Set original values
+<b class="nc">&nbsp;        expenseDetails.setOriginalAmount(expenseDetails.getAmount());</b>
+&nbsp;
+<b class="nc">&nbsp;        String expenseCurrency = expenseDetails.getCurrency() != null ?</b>
+<b class="nc">&nbsp;            expenseDetails.getCurrency() : &quot;EUR&quot;;</b>
+<b class="nc">&nbsp;        expenseDetails.setCurrency(expenseCurrency);</b>
+&nbsp;
+&nbsp;        // Convert to target currency if different
+<b class="nc">&nbsp;        if (targetCurrency != null &amp;&amp; !expenseCurrency.equals(targetCurrency)) {</b>
+<b class="nc">&nbsp;            BigDecimal exchangeRate = currencyService.getExchangeRate(expenseCurrency, targetCurrency);</b>
+<b class="nc">&nbsp;            BigDecimal convertedAmount = expenseDetails.getAmount().multiply(exchangeRate);</b>
+&nbsp;
+<b class="nc">&nbsp;            expenseDetails.setAmount(convertedAmount);</b>
+<b class="nc">&nbsp;            expenseDetails.setExchangeRate(exchangeRate);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expenseDetails.setExchangeRate(BigDecimal.ONE);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return createExpense(tripId, expenseDetails);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Expense updateExpense(int id, Expense expenseDetails) {
+<b class="nc">&nbsp;        Expense expense = expenseDAL.getExpenseById(id)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Expense not found with id: &quot; + id));</b>
+&nbsp;
+<b class="nc">&nbsp;        expense.setDescription(expenseDetails.getDescription());</b>
+<b class="nc">&nbsp;        expense.setAmount(expenseDetails.getAmount());</b>
+<b class="nc">&nbsp;        expense.setCategory(expenseDetails.getCategory());</b>
+<b class="nc">&nbsp;        expense.setExpenseDate(expenseDetails.getExpenseDate());</b>
+<b class="nc">&nbsp;        expense.setReceiptUrl(expenseDetails.getReceiptUrl());</b>
+<b class="nc">&nbsp;        expense.setValidated(expenseDetails.isValidated());</b>
+&nbsp;
+&nbsp;        // Update currency fields if provided
+<b class="nc">&nbsp;        if (expenseDetails.getOriginalAmount() != null) {</b>
+<b class="nc">&nbsp;            expense.setOriginalAmount(expenseDetails.getOriginalAmount());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (expenseDetails.getCurrency() != null) {</b>
+<b class="nc">&nbsp;            expense.setCurrency(expenseDetails.getCurrency());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (expenseDetails.getExchangeRate() != null) {</b>
+<b class="nc">&nbsp;            expense.setExchangeRate(expenseDetails.getExchangeRate());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Paid-by update
+<b class="nc">&nbsp;        if (expenseDetails.getPaidBy() != null) {</b>
+<b class="nc">&nbsp;            expense.setPaidBy(expenseDetails.getPaidBy());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Expense saved = expenseDAL.saveExpense(expense);</b>
+&nbsp;
+&nbsp;        // NOTE: For simplicity we don&#39;t update shares on expense update in this change. This can be extended later.
+&nbsp;
+<b class="nc">&nbsp;        return saved;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;     // Convert expense amount to target currency
+&nbsp;
+&nbsp;    private void convertExpenseCurrency(Expense expense, String targetCurrency) {
+<b class="nc">&nbsp;        if (!expense.getCurrency().equals(targetCurrency)) {</b>
+<b class="nc">&nbsp;            BigDecimal exchangeRate = currencyService.getExchangeRate(expense.getCurrency(), targetCurrency);</b>
+<b class="nc">&nbsp;            BigDecimal convertedAmount = expense.getOriginalAmount().multiply(exchangeRate);</b>
+<b class="nc">&nbsp;            expense.setAmount(convertedAmount);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create ExpenseShare rows for a newly saved expense based on transient split fields
+&nbsp;     * Rules:
+&nbsp;     * - If expenseDetails.splitWithUserIds is provided, shares will be created for the union of paidBy and splitWithUserIds
+&nbsp;     * - If splitWithUserIds is empty or null, no shares are created (no split requested)
+&nbsp;     * - If splitEvenly == true, the total amount is divided evenly across participants
+&nbsp;     */
+&nbsp;    private void createSharesForExpense(Expense savedExpense, Expense expenseDetails) {
+<b class="nc">&nbsp;        List&lt;Long&gt; splitWith = expenseDetails.getSplitWithUserIds();</b>
+<b class="nc">&nbsp;        Boolean splitEvenly = expenseDetails.getSplitEvenly();</b>
+<b class="nc">&nbsp;        Long paidBy = savedExpense.getPaidBy();</b>
+&nbsp;
+<b class="nc">&nbsp;        if ((splitWith == null || splitWith.isEmpty())) {</b>
+&nbsp;            // nothing to do
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Build unique participant list including payer
+<b class="nc">&nbsp;        Set&lt;Long&gt; participantSet = new LinkedHashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        if (paidBy != null) participantSet.add(paidBy);</b>
+<b class="nc">&nbsp;        participantSet.addAll(splitWith);</b>
+&nbsp;
+<b class="nc">&nbsp;        int participants = participantSet.size();</b>
+<b class="nc">&nbsp;        if (participants == 0) return;</b>
+&nbsp;
+&nbsp;        // Only support even split for now
+<b class="nc">&nbsp;        BigDecimal total = savedExpense.getAmount() != null ? savedExpense.getAmount() : BigDecimal.ZERO;</b>
+<b class="nc">&nbsp;        BigDecimal shareAmount = total.divide(new BigDecimal(participants), 2, RoundingMode.HALF_UP);</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Long userId : participantSet) {</b>
+<b class="nc">&nbsp;            ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);</b>
+<b class="nc">&nbsp;            expenseShareDAL.saveShare(share);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteExpense(int id) {
+<b class="nc">&nbsp;        if (!expenseDAL.existsById(id)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Expense not found with id: &quot; + id);</b>
+&nbsp;        }
+&nbsp;        // Remove all shares for this expense before deleting the expense
+<b class="nc">&nbsp;        expenseShareDAL.deleteSharesByExpenseId(id);</b>
+<b class="nc">&nbsp;        expenseDAL.deleteExpense(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a shared expense from SharedExpenseRequest DTO using participant IDs
+&nbsp;     * Converts the DTO to an Expense entity and creates shares for all participants
+&nbsp;     */
+&nbsp;    public Expense createSharedExpense(int tripId, SharedExpenseRequest request) {
+&nbsp;        // Validate required fields
+<b class="nc">&nbsp;        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Description is required&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (request.getAmount() &lt;= 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Amount must be greater than 0&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (request.getSplitWithParticipantIds() == null || request.getSplitWithParticipantIds().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Split participants are required&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Get the expense category
+<b class="nc">&nbsp;        ExpenseCategory category = expenseCategoryService.getCategoryById((long) request.getCategoryId())</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Category not found with id: &quot; + request.getCategoryId()));</b>
+&nbsp;
+&nbsp;        // Get payer participant and validate
+<b class="nc">&nbsp;        TripParticipant payer = tripParticipantService.getParticipantById(request.getPaidByParticipantId())</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Payer participant not found with id: &quot; + request.getPaidByParticipantId()));</b>
+&nbsp;
+&nbsp;        // Validate that payer belongs to this trip
+<b class="nc">&nbsp;        if (!payer.getTripId().equals(tripId)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Payer participant does not belong to this trip&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Create expense entity
+<b class="nc">&nbsp;        Expense expense = new Expense();</b>
+<b class="nc">&nbsp;        expense.setTripId(tripId);</b>
+<b class="nc">&nbsp;        expense.setDescription(request.getDescription());</b>
+<b class="nc">&nbsp;        expense.setAmount(BigDecimal.valueOf(request.getAmount()));</b>
+<b class="nc">&nbsp;        expense.setOriginalAmount(BigDecimal.valueOf(request.getAmount()));</b>
+<b class="nc">&nbsp;        expense.setCurrency(request.getCurrency() != null ? request.getCurrency() : &quot;EUR&quot;);</b>
+<b class="nc">&nbsp;        expense.setExchangeRate(BigDecimal.ONE);</b>
+<b class="nc">&nbsp;        expense.setCategory(category);</b>
+<b class="nc">&nbsp;        expense.setPaidBy(payer.getUserId()); // Store user ID in expense</b>
+<b class="nc">&nbsp;        expense.setValidated(false);</b>
+&nbsp;
+&nbsp;        // Parse expense date
+<b class="nc">&nbsp;        if (request.getExpenseDate() != null &amp;&amp; !request.getExpenseDate().trim().isEmpty()) {</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                LocalDate expenseDate = LocalDate.parse(request.getExpenseDate(), DateTimeFormatter.ISO_LOCAL_DATE);</b>
+<b class="nc">&nbsp;                expense.setExpenseDate(expenseDate);</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Invalid expense date format. Expected YYYY-MM-DD&quot;);</b>
+&nbsp;            }
+&nbsp;        } else {
+<b class="nc">&nbsp;            expense.setExpenseDate(LocalDate.now());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Save the expense first
+<b class="nc">&nbsp;        Expense saved = expenseDAL.saveExpense(expense);</b>
+&nbsp;
+&nbsp;        // Create shares for participants using participant IDs
+<b class="nc">&nbsp;        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly(), request.getCustomSplits());</b>
+&nbsp;
+&nbsp;        // Populate shared expense fields for frontend compatibility
+<b class="nc">&nbsp;        populateSharedExpenseFields(saved);</b>
+&nbsp;
+<b class="nc">&nbsp;        return saved;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create ExpenseShare rows for participants based on participant IDs
+&nbsp;     */
+&nbsp;    private void createSharesForParticipants(Expense savedExpense, int paidByParticipantId, List&lt;Integer&gt; splitWithParticipantIds, boolean splitEvenly, Map&lt;Integer, Double&gt; customSplits) {
+<b class="nc">&nbsp;        if (splitWithParticipantIds == null || splitWithParticipantIds.isEmpty()) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Build unique participant list including payer
+<b class="nc">&nbsp;        Set&lt;Integer&gt; participantIds = new LinkedHashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        participantIds.add(paidByParticipantId);</b>
+<b class="nc">&nbsp;        participantIds.addAll(splitWithParticipantIds);</b>
+&nbsp;
+&nbsp;        // Get all participants and validate they belong to the trip
+<b class="nc">&nbsp;        Map&lt;Integer, Long&gt; participantIdToUserIdMap = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Integer participantId : participantIds) {</b>
+<b class="nc">&nbsp;            TripParticipant participant = tripParticipantService.getParticipantById(participantId)</b>
+<b class="nc">&nbsp;                    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Participant not found with id: &quot; + participantId));</b>
+&nbsp;
+<b class="nc">&nbsp;            if (!participant.getTripId().equals(savedExpense.getTripId())) {</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Participant &quot; + participantId + &quot; does not belong to this trip&quot;);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            participantIdToUserIdMap.put(participantId, participant.getUserId());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        int participantCount = participantIds.size();</b>
+<b class="nc">&nbsp;        if (participantCount == 0) return;</b>
+&nbsp;
+&nbsp;        // Create expense shares using custom splits if provided, otherwise split evenly
+<b class="nc">&nbsp;        if (!splitEvenly &amp;&amp; customSplits != null &amp;&amp; !customSplits.isEmpty()) {</b>
+&nbsp;            // Custom split: use provided amounts
+<b class="nc">&nbsp;            BigDecimal totalCustomAmount = BigDecimal.ZERO;</b>
+&nbsp;
+<b class="nc">&nbsp;            for (Integer participantId : participantIds) {</b>
+<b class="nc">&nbsp;                Double customAmount = customSplits.get(participantId);</b>
+<b class="nc">&nbsp;                if (customAmount != null &amp;&amp; customAmount &gt; 0) {</b>
+<b class="nc">&nbsp;                    BigDecimal shareAmount = BigDecimal.valueOf(customAmount);</b>
+<b class="nc">&nbsp;                    totalCustomAmount = totalCustomAmount.add(shareAmount);</b>
+&nbsp;
+<b class="nc">&nbsp;                    Long userId = participantIdToUserIdMap.get(participantId);</b>
+<b class="nc">&nbsp;                    ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);</b>
+<b class="nc">&nbsp;                    expenseShareDAL.saveShare(share);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+&nbsp;            // Validate that custom splits add up to total expense amount (with small tolerance)
+<b class="nc">&nbsp;            BigDecimal totalExpense = savedExpense.getAmount() != null ? savedExpense.getAmount() : BigDecimal.ZERO;</b>
+<b class="nc">&nbsp;            BigDecimal difference = totalExpense.subtract(totalCustomAmount).abs();</b>
+<b class="nc">&nbsp;            if (difference.compareTo(new BigDecimal(&quot;0.01&quot;)) &gt; 0) {</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Custom split amounts (&quot; + totalCustomAmount + &quot;) do not add up to total expense amount (&quot; + totalExpense + &quot;)&quot;);</b>
+&nbsp;            }
+&nbsp;        } else {
+&nbsp;            // Even split: divide amount evenly across participants
+<b class="nc">&nbsp;            BigDecimal total = savedExpense.getAmount() != null ? savedExpense.getAmount() : BigDecimal.ZERO;</b>
+<b class="nc">&nbsp;            BigDecimal shareAmount = total.divide(new BigDecimal(participantCount), 2, RoundingMode.HALF_UP);</b>
+&nbsp;
+<b class="nc">&nbsp;            for (Integer participantId : participantIds) {</b>
+<b class="nc">&nbsp;                Long userId = participantIdToUserIdMap.get(participantId);</b>
+<b class="nc">&nbsp;                ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);</b>
+<b class="nc">&nbsp;                expenseShareDAL.saveShare(share);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update a shared expense from SharedExpenseRequest DTO using participant IDs
+&nbsp;     */
+&nbsp;    public Expense updateSharedExpense(int tripId, int expenseId, SharedExpenseRequest request) {
+&nbsp;        // Validate required fields
+<b class="nc">&nbsp;        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Description is required&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (request.getAmount() &lt;= 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Amount must be greater than 0&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (request.getSplitWithParticipantIds() == null || request.getSplitWithParticipantIds().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Split participants are required&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Get existing expense and validate
+<b class="nc">&nbsp;        Expense existingExpense = expenseDAL.getExpenseById(expenseId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Expense not found with id: &quot; + expenseId));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (existingExpense.getTripId() != tripId) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Expense does not belong to this trip&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Get the expense category
+<b class="nc">&nbsp;        ExpenseCategory category = expenseCategoryService.getCategoryById((long) request.getCategoryId())</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Category not found with id: &quot; + request.getCategoryId()));</b>
+&nbsp;
+&nbsp;        // Get payer participant and validate
+<b class="nc">&nbsp;        TripParticipant payer = tripParticipantService.getParticipantById(request.getPaidByParticipantId())</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Payer participant not found with id: &quot; + request.getPaidByParticipantId()));</b>
+&nbsp;
+&nbsp;        // Validate that payer belongs to this trip
+<b class="nc">&nbsp;        if (!payer.getTripId().equals(tripId)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Payer participant does not belong to this trip&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Update expense fields
+<b class="nc">&nbsp;        existingExpense.setDescription(request.getDescription());</b>
+<b class="nc">&nbsp;        existingExpense.setAmount(BigDecimal.valueOf(request.getAmount()));</b>
+<b class="nc">&nbsp;        existingExpense.setOriginalAmount(BigDecimal.valueOf(request.getAmount()));</b>
+<b class="nc">&nbsp;        existingExpense.setCurrency(request.getCurrency() != null ? request.getCurrency() : &quot;EUR&quot;);</b>
+<b class="nc">&nbsp;        existingExpense.setExchangeRate(BigDecimal.ONE);</b>
+<b class="nc">&nbsp;        existingExpense.setCategory(category);</b>
+<b class="nc">&nbsp;        existingExpense.setPaidBy(payer.getUserId()); // Store user ID in expense</b>
+&nbsp;
+&nbsp;        // Parse expense date
+<b class="nc">&nbsp;        if (request.getExpenseDate() != null &amp;&amp; !request.getExpenseDate().trim().isEmpty()) {</b>
+&nbsp;            try {
+<b class="nc">&nbsp;                LocalDate expenseDate = LocalDate.parse(request.getExpenseDate(), DateTimeFormatter.ISO_LOCAL_DATE);</b>
+<b class="nc">&nbsp;                existingExpense.setExpenseDate(expenseDate);</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Invalid expense date format. Expected YYYY-MM-DD&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Save the updated expense
+<b class="nc">&nbsp;        Expense saved = expenseDAL.saveExpense(existingExpense);</b>
+&nbsp;
+&nbsp;        // Remove existing shares and create new ones
+<b class="nc">&nbsp;        expenseShareDAL.deleteSharesByExpenseId(expenseId);</b>
+<b class="nc">&nbsp;        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly(), request.getCustomSplits());</b>
+&nbsp;
+&nbsp;        // Populate shared expense fields for frontend compatibility
+<b class="nc">&nbsp;        populateSharedExpenseFields(saved);</b>
+&nbsp;
+<b class="nc">&nbsp;        return saved;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Populate shared expense fields for frontend compatibility
+&nbsp;     */
+&nbsp;    private void populateSharedExpenseFields(Expense expense) {
+&nbsp;        // Check if this expense has shares
+<b class="nc">&nbsp;        List&lt;ExpenseShare&gt; shares = expenseShareDAL.getSharesByExpenseId(expense.getExpenseId());</b>
+&nbsp;
+<b class="nc">&nbsp;        if (shares != null &amp;&amp; !shares.isEmpty()) {</b>
+<b class="nc">&nbsp;            expense.setIsSharedExpense(true);</b>
+&nbsp;
+&nbsp;            // Convert user IDs back to participant IDs for frontend compatibility
+<b class="nc">&nbsp;            List&lt;Integer&gt; participantIds = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;            Map&lt;Integer, Double&gt; customSplits = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            Integer payerParticipantId = null;</b>
+&nbsp;
+&nbsp;            // Get all participants for this trip to create user-&gt;participant mapping
+<b class="nc">&nbsp;            List&lt;TripParticipant&gt; tripParticipants = tripParticipantService.getParticipantsByTripId(expense.getTripId());</b>
+<b class="nc">&nbsp;            Map&lt;Long, Integer&gt; userIdToParticipantIdMap = new HashMap&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;            for (TripParticipant participant : tripParticipants) {</b>
+<b class="nc">&nbsp;                userIdToParticipantIdMap.put(participant.getUserId(), participant.getId());</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // Check if all shares have the same amount (even split) or different amounts (custom split)
+<b class="nc">&nbsp;            BigDecimal firstShareAmount = null;</b>
+<b class="nc">&nbsp;            boolean isEvenSplit = true;</b>
+&nbsp;
+&nbsp;            // Convert shares to participant IDs and build custom splits map
+<b class="nc">&nbsp;            for (ExpenseShare share : shares) {</b>
+<b class="nc">&nbsp;                Integer participantId = userIdToParticipantIdMap.get(share.getUserId());</b>
+<b class="nc">&nbsp;                if (participantId != null) {</b>
+<b class="nc">&nbsp;                    participantIds.add(participantId);</b>
+<b class="nc">&nbsp;                    customSplits.put(participantId, share.getAmount().doubleValue());</b>
+&nbsp;
+&nbsp;                    // Check if this is the payer
+<b class="nc">&nbsp;                    if (expense.getPaidBy() != null &amp;&amp; expense.getPaidBy().equals(share.getUserId())) {</b>
+<b class="nc">&nbsp;                        payerParticipantId = participantId;</b>
+&nbsp;                    }
+&nbsp;
+&nbsp;                    // Check if all amounts are the same (even split)
+<b class="nc">&nbsp;                    if (firstShareAmount == null) {</b>
+<b class="nc">&nbsp;                        firstShareAmount = share.getAmount();</b>
+<b class="nc">&nbsp;                    } else if (!firstShareAmount.equals(share.getAmount())) {</b>
+<b class="nc">&nbsp;                        isEvenSplit = false;</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            expense.setPaidById(payerParticipantId);</b>
+<b class="nc">&nbsp;            expense.setSplitWith(participantIds);</b>
+<b class="nc">&nbsp;            expense.setSplitEvenly(isEvenSplit);</b>
+&nbsp;
+&nbsp;            // Always set custom splits - frontend can use this for editing
+<b class="nc">&nbsp;            expense.setCustomSplits(customSplits);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            expense.setIsSharedExpense(false);</b>
+<b class="nc">&nbsp;            expense.setPaidById(null);</b>
+<b class="nc">&nbsp;            expense.setSplitWith(new ArrayList&lt;&gt;());</b>
+<b class="nc">&nbsp;            expense.setSplitEvenly(true);</b>
+<b class="nc">&nbsp;            expense.setCustomSplits(new HashMap&lt;&gt;());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Populate shared expense fields for a list of expenses
+&nbsp;     */
+&nbsp;    private void populateSharedExpenseFields(List&lt;Expense&gt; expenses) {
+<b class="nc">&nbsp;        for (Expense expense : expenses) {</b>
+<b class="nc">&nbsp;            populateSharedExpenseFields(expense);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-24 13:39</div>
+</div>
+</body>
+</html>

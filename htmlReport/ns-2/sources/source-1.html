@@ -1,0 +1,149 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ActivityDAL</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tripwise_api.DAL</a>
+</div>
+
+<h1>Coverage Summary for Class: ActivityDAL (com.example.tripwise_api.DAL)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ActivityDAL</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    12,5%
+  </span>
+  <span class="absValue">
+    (1/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    22,2%
+  </span>
+  <span class="absValue">
+    (2/9)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tripwise_api.DAL;
+&nbsp;
+&nbsp;import com.example.tripwise_api.Model.Activity;
+&nbsp;import com.example.tripwise_api.Repository.ActivityRepository;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;@Component
+&nbsp;public class ActivityDAL {
+&nbsp;    private final ActivityRepository activityRepository;
+&nbsp;
+<b class="fc">&nbsp;    public ActivityDAL(ActivityRepository activityRepository) {</b>
+<b class="fc">&nbsp;        this.activityRepository = activityRepository;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Activity&gt; getAllActivities() {
+<b class="nc">&nbsp;        return activityRepository.findAll();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Activity&gt; getActivitiesByTripId(Long tripId) {
+<b class="nc">&nbsp;        return activityRepository.findByTripId(tripId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Activity&gt; getActivitiesWithCost(Long tripId) {
+<b class="nc">&nbsp;        return activityRepository.findByTripIdAndEstimatedCostIsNotNull(tripId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Optional&lt;Activity&gt; getActivityById(Long id) {
+<b class="nc">&nbsp;        return activityRepository.findById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Activity saveActivity(Activity activity) {
+<b class="nc">&nbsp;        return activityRepository.save(activity);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void deleteActivity(Long id) {
+<b class="nc">&nbsp;        activityRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean existsById(Long id) {
+<b class="nc">&nbsp;        return activityRepository.existsById(id);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-24 13:39</div>
+</div>
+</body>
+</html>
