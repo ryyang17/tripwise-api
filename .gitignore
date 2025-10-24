@@ -26,6 +26,10 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+### SSH ###
+eval%20%24%28ssh-agent%20-s%29.pub
+eval $(ssh-agent -s)
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
