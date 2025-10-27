@@ -4,6 +4,7 @@ import com.example.tripwise_api.Model.Activity;
 import com.example.tripwise_api.Repository.ActivityRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,14 @@ public class ActivityDAL {
 
     public List<Activity> getActivitiesWithCost(Long tripId) {
         return activityRepository.findByTripIdAndEstimatedCostIsNotNull(tripId);
+    }
+
+    public List<Activity> getActivitiesSortedByDate(Long tripId) {
+        return activityRepository.findByTripIdOrderByDateAscTimeAsc(tripId);
+    }
+
+    public List<Activity> getActivitiesByDate(Long tripId, LocalDate date) {
+        return activityRepository.findByTripIdAndDate(tripId, date);
     }
 
     public Optional<Activity> getActivityById(Long id) {

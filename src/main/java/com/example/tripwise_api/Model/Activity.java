@@ -1,6 +1,8 @@
 package com.example.tripwise_api.Model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -19,11 +21,16 @@ public class Activity {
 
     private String description;
 
-    private String time;
+    @Column(name = "date")
+    private LocalDate date; // NEW FIELD - simple date
+
+    @Column(name = "time")
+    private LocalTime time; // Updated to use LocalTime instead of String
 
     private String location;
 
-    private Double estimatedCost;
+    @Column(name = "estimated_cost", precision = 10, scale = 2)
+    private BigDecimal estimatedCost; // Updated to use BigDecimal instead of Double
 
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -33,7 +40,7 @@ public class Activity {
         this.createdDate = LocalDateTime.now();
     }
 
-    public Activity(Long tripId, String name, String location, String time) {
+    public Activity(Long tripId, String name, String location, LocalTime time) {
         this();
         this.tripId = tripId;
         this.name = name;
@@ -42,7 +49,7 @@ public class Activity {
     }
 
     // Business methods
-    public void updateTime(String newTime) {
+    public void updateTime(LocalTime newTime) {
         this.time = newTime;
     }
 
@@ -51,7 +58,7 @@ public class Activity {
     }
 
     public boolean hasEstimatedCost() {
-        return estimatedCost != null && estimatedCost > 0;
+        return estimatedCost != null && estimatedCost.compareTo(BigDecimal.ZERO) > 0;
     }
 
     @Override
@@ -60,8 +67,9 @@ public class Activity {
                 "activityId=" + activityId +
                 ", tripId=" + tripId +
                 ", name='" + name + '\'' +
+                ", date=" + date +
                 ", location='" + location + '\'' +
-                ", time='" + time + '\'' +
+                ", time=" + time +
                 ", estimatedCost=" + estimatedCost +
                 '}';
     }
@@ -79,14 +87,17 @@ public class Activity {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getTime() { return time; }
-    public void setTime(String time) { this.time = time; }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
+
+    public LocalTime getTime() { return time; }
+    public void setTime(LocalTime time) { this.time = time; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
 
-    public Double getEstimatedCost() { return estimatedCost; }
-    public void setEstimatedCost(Double estimatedCost) { this.estimatedCost = estimatedCost; }
+    public BigDecimal getEstimatedCost() { return estimatedCost; }
+    public void setEstimatedCost(BigDecimal estimatedCost) { this.estimatedCost = estimatedCost; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

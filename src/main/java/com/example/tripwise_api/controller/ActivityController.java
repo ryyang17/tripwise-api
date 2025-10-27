@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -18,11 +20,18 @@ public class ActivityController {
     @Autowired
     private ActivityService activityService;
 
-    // GET /api/trips/{tripId}/activities - Alle activiteiten voor een trip
+    // GET /api/trips/{tripId}/activities - All activities for a trip (now sorted by date)
     @GetMapping("/trips/{tripId}/activities")
     public ResponseEntity<List<Activity>> getActivitiesByTrip(@PathVariable Long tripId) {
-        List<Activity> activities = activityService.getActivitiesByTripId(tripId);
+        List<Activity> activities = activityService.getActivitiesSortedByDate(tripId);
         return ResponseEntity.ok(activities);
+    }
+
+    // GET /api/trips/{tripId}/activities/by-date - Activities grouped by date
+    @GetMapping("/trips/{tripId}/activities/by-date")
+    public ResponseEntity<Map<LocalDate, List<Activity>>> getActivitiesByDate(@PathVariable Long tripId) {
+        Map<LocalDate, List<Activity>> activitiesByDate = activityService.getActivitiesByDate(tripId);
+        return ResponseEntity.ok(activitiesByDate);
     }
 
     // GET /api/activities/{id} - Specifieke activiteit
@@ -33,7 +42,7 @@ public class ActivityController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST /api/trips/{tripId}/activities - Nieuwe activiteit toevoegen aan trip
+    // POST /api/trips/{tripId}/activities - Add new activity to trip (now with date validation)
     @PostMapping("/trips/{tripId}/activities")
     public ResponseEntity<?> addActivityToTrip(@PathVariable Long tripId, @RequestBody Activity activity) {
         try {
@@ -44,7 +53,7 @@ public class ActivityController {
         }
     }
 
-    // PUT /api/activities/{id} - Update activiteit
+    // PUT /api/activities/{id} - Update activity (now with date validation)
     @PutMapping("/activities/{id}")
     public ResponseEntity<?> updateActivity(@PathVariable Long id, @RequestBody Activity activityDetails) {
         try {
