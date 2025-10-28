@@ -1,80 +1,89 @@
 package com.example.tripwise_api.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.example.tripwise_api.model.ExpenseCategory;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 public class ExpenseResponse {
-    private Long id;
+    private Integer expenseId;
+    private Integer tripId;
     private String description;
-    private double amount;
-    private String currency;
-    private String category;
-    private LocalDateTime expenseDate;
-    private String paidByParticipant;
-    private Map<String, Double> splits;
+    private BigDecimal amount; // Converted to user's preferred currency
+    private BigDecimal originalAmount; // Original currency amount
+    private String currency; // Original currency code
+
+    private ExpenseCategory category; // Full category object for frontend
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate expenseDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdDate;
+
+    private String receiptUrl;
+    private Boolean isValidated;
+
+    // Fields for shared expenses
+    private Integer paidById; // participant ID
+    private List<Integer> splitWith; // list of participant IDs
+    private Boolean splitEvenly;
+    private Boolean isSharedExpense;
+    private Map<String, BigDecimal> customSplits; // participantId as string -> amount
+
+    // Constructors
+    public ExpenseResponse() {}
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+    public Integer getExpenseId() { return expenseId; }
+    public void setExpenseId(Integer expenseId) { this.expenseId = expenseId; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Integer getTripId() { return tripId; }
+    public void setTripId(Integer tripId) { this.tripId = tripId; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public double getAmount() {
-        return amount;
-    }
+    public BigDecimal getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
 
-    public String getCurrency() {
-        return currency;
-    }
+    public ExpenseCategory getCategory() { return category; }
+    public void setCategory(ExpenseCategory category) { this.category = category; }
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
+    public LocalDate getExpenseDate() { return expenseDate; }
+    public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }
 
-    public String getCategory() {
-        return category;
-    }
+    public LocalDateTime getCreatedDate() { return createdDate; }
+    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
+    public String getReceiptUrl() { return receiptUrl; }
+    public void setReceiptUrl(String receiptUrl) { this.receiptUrl = receiptUrl; }
 
-    public LocalDateTime getExpenseDate() {
-        return expenseDate;
-    }
+    public Boolean getIsValidated() { return isValidated; }
+    public void setIsValidated(Boolean isValidated) { this.isValidated = isValidated; }
 
-    public void setExpenseDate(LocalDateTime expenseDate) {
-        this.expenseDate = expenseDate;
-    }
+    public Integer getPaidById() { return paidById; }
+    public void setPaidById(Integer paidById) { this.paidById = paidById; }
 
-    public String getPaidByParticipant() {
-        return paidByParticipant;
-    }
+    public List<Integer> getSplitWith() { return splitWith; }
+    public void setSplitWith(List<Integer> splitWith) { this.splitWith = splitWith; }
 
-    public void setPaidByParticipant(String paidByParticipant) {
-        this.paidByParticipant = paidByParticipant;
-    }
+    public Boolean getSplitEvenly() { return splitEvenly; }
+    public void setSplitEvenly(Boolean splitEvenly) { this.splitEvenly = splitEvenly; }
 
-    public Map<String, Double> getSplits() {
-        return splits;
-    }
+    public Boolean getIsSharedExpense() { return isSharedExpense; }
+    public void setIsSharedExpense(Boolean isSharedExpense) { this.isSharedExpense = isSharedExpense; }
 
-    public void setSplits(Map<String, Double> splits) {
-        this.splits = splits;
-    }
+    public Map<String, BigDecimal> getCustomSplits() { return customSplits; }
+    public void setCustomSplits(Map<String, BigDecimal> customSplits) { this.customSplits = customSplits; }
 }

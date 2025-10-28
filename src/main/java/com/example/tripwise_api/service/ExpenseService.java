@@ -6,7 +6,7 @@ import com.example.tripwise_api.model.ExpenseCategory;
 import com.example.tripwise_api.model.TripParticipant;
 import com.example.tripwise_api.dal.ExpenseDAL;
 import com.example.tripwise_api.dal.ExpenseShareDAL;
-import com.example.tripwise_api.dto.SharedExpenseRequest;
+import com.example.tripwise_api.dto.request.SharedExpenseRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -234,7 +234,7 @@ public class ExpenseService {
         if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
             throw new IllegalArgumentException("Description is required");
         }
-        if (request.getAmount() <= 0) {
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
         if (request.getSplitWithParticipantIds() == null || request.getSplitWithParticipantIds().isEmpty()) {
@@ -258,22 +258,17 @@ public class ExpenseService {
         Expense expense = new Expense();
         expense.setTripId(tripId);
         expense.setDescription(request.getDescription());
-        expense.setAmount(BigDecimal.valueOf(request.getAmount()));
-        expense.setOriginalAmount(BigDecimal.valueOf(request.getAmount()));
+        expense.setAmount(request.getAmount());
+        expense.setOriginalAmount(request.getAmount());
         expense.setCurrency(request.getCurrency() != null ? request.getCurrency() : "EUR");
         expense.setExchangeRate(BigDecimal.ONE);
         expense.setCategory(category);
         expense.setPaidBy(payer.getUserId()); // Store user ID in expense
         expense.setValidated(false);
 
-        // Parse expense date
-        if (request.getExpenseDate() != null && !request.getExpenseDate().trim().isEmpty()) {
-            try {
-                LocalDate expenseDate = LocalDate.parse(request.getExpenseDate(), DateTimeFormatter.ISO_LOCAL_DATE);
-                expense.setExpenseDate(expenseDate);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Invalid expense date format. Expected YYYY-MM-DD");
-            }
+        // Set expense date (already LocalDate from request)
+        if (request.getExpenseDate() != null) {
+            expense.setExpenseDate(request.getExpenseDate());
         } else {
             expense.setExpenseDate(LocalDate.now());
         }
@@ -281,8 +276,19 @@ public class ExpenseService {
         // Save the expense first
         Expense saved = expenseDAL.saveExpense(expense);
 
+        // Convert customSplits from Map<String, BigDecimal> to Map<Integer, Double>
+        Map<Integer, Double> convertedCustomSplits = null;
+        if (request.getCustomSplits() != null && !request.getCustomSplits().isEmpty()) {
+            convertedCustomSplits = new HashMap<>();
+            for (Map.Entry<String, BigDecimal> entry : request.getCustomSplits().entrySet()) {
+                convertedCustomSplits.put(Integer.parseInt(entry.getKey()), entry.getValue().doubleValue());
+            }
+        }
+
         // Create shares for participants using participant IDs
-        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly(), request.getCustomSplits());
+        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(),
+                                   request.getSplitEvenly() != null ? request.getSplitEvenly() : false,
+                                   convertedCustomSplits);
 
         // Populate shared expense fields for frontend compatibility
         populateSharedExpenseFields(saved);
@@ -359,7 +365,7 @@ public class ExpenseService {
         if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
             throw new IllegalArgumentException("Description is required");
         }
-        if (request.getAmount() <= 0) {
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
         if (request.getSplitWithParticipantIds() == null || request.getSplitWithParticipantIds().isEmpty()) {
@@ -389,29 +395,35 @@ public class ExpenseService {
 
         // Update expense fields
         existingExpense.setDescription(request.getDescription());
-        existingExpense.setAmount(BigDecimal.valueOf(request.getAmount()));
-        existingExpense.setOriginalAmount(BigDecimal.valueOf(request.getAmount()));
+        existingExpense.setAmount(request.getAmount());
+        existingExpense.setOriginalAmount(request.getAmount());
         existingExpense.setCurrency(request.getCurrency() != null ? request.getCurrency() : "EUR");
         existingExpense.setExchangeRate(BigDecimal.ONE);
         existingExpense.setCategory(category);
         existingExpense.setPaidBy(payer.getUserId()); // Store user ID in expense
 
-        // Parse expense date
-        if (request.getExpenseDate() != null && !request.getExpenseDate().trim().isEmpty()) {
-            try {
-                LocalDate expenseDate = LocalDate.parse(request.getExpenseDate(), DateTimeFormatter.ISO_LOCAL_DATE);
-                existingExpense.setExpenseDate(expenseDate);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Invalid expense date format. Expected YYYY-MM-DD");
-            }
+        // Set expense date (already LocalDate from request)
+        if (request.getExpenseDate() != null) {
+            existingExpense.setExpenseDate(request.getExpenseDate());
         }
 
         // Save the updated expense
         Expense saved = expenseDAL.saveExpense(existingExpense);
 
+        // Convert customSplits from Map<String, BigDecimal> to Map<Integer, Double>
+        Map<Integer, Double> convertedCustomSplits = null;
+        if (request.getCustomSplits() != null && !request.getCustomSplits().isEmpty()) {
+            convertedCustomSplits = new HashMap<>();
+            for (Map.Entry<String, BigDecimal> entry : request.getCustomSplits().entrySet()) {
+                convertedCustomSplits.put(Integer.parseInt(entry.getKey()), entry.getValue().doubleValue());
+            }
+        }
+
         // Remove existing shares and create new ones
         expenseShareDAL.deleteSharesByExpenseId(expenseId);
-        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(), request.isSplitEvenly(), request.getCustomSplits());
+        createSharesForParticipants(saved, request.getPaidByParticipantId(), request.getSplitWithParticipantIds(),
+                                   request.getSplitEvenly() != null ? request.getSplitEvenly() : false,
+                                   convertedCustomSplits);
 
         // Populate shared expense fields for frontend compatibility
         populateSharedExpenseFields(saved);
