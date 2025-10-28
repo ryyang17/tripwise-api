@@ -3,8 +3,8 @@ stages:
   - test
   - package
   - docker
-  - deploy
   - sonar
+  - deploy
 
 sonarcloud-check:
   stage: sonar
