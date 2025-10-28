@@ -43,5 +43,4 @@ public class GlobalErrorController implements org.springframework.boot.web.servl
 
 		return ResponseEntity.status(status).body(body);
 	}
-
 }
