@@ -50,10 +50,17 @@ test:
     - chmod +x ./gradlew
   script:
     - ./gradlew test -Dspring.profiles.active=test
+    - ./gradlew jacocoTestReport
   artifacts:
     when: always
+    paths:
+      - build/reports/jacoco/test/jacocoTestReport.xml
+      - build/reports/jacoco/test/html/
     reports:
       junit: build/test-results/test/TEST-*.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: build/reports/jacoco/test/jacocoTestReport.xml
 
 package:
   stage: package
@@ -128,5 +135,8 @@ sonarcloud-gradle-check:
     - chmod +x ./gradlew
   script:
     - ./gradlew sonarqube -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN}
+  needs:
+    - job: test
+      artifacts: true
   rules:
     - when: always

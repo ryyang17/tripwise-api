@@ -12,11 +12,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-public class ErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
+public class GlobalErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
 
 	private final ErrorAttributes errorAttributes;
 
-	public ErrorController(ErrorAttributes errorAttributes) {
+	public GlobalErrorController(ErrorAttributes errorAttributes) {
 		this.errorAttributes = errorAttributes;
 	}
 

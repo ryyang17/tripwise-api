@@ -1,8 +1,7 @@
 package com.example.tripwise_api.controller;
 
-import com.example.tripwise_api.Model.Activity;
-import com.example.tripwise_api.Service.ActivityService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.tripwise_api.model.Activity;
+import com.example.tripwise_api.service.ActivityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +16,11 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class ActivityController {
 
-    @Autowired
-    private ActivityService activityService;
+    private final ActivityService activityService;
+
+    public ActivityController(ActivityService activityService) {
+        this.activityService = activityService;
+    }
 
     // GET /api/trips/{tripId}/activities - All activities for a trip (now sorted by date)
     @GetMapping("/trips/{tripId}/activities")
@@ -44,23 +46,23 @@ public class ActivityController {
 
     // POST /api/trips/{tripId}/activities - Add new activity to trip (now with date validation)
     @PostMapping("/trips/{tripId}/activities")
-    public ResponseEntity<?> addActivityToTrip(@PathVariable Long tripId, @RequestBody Activity activity) {
+    public ResponseEntity<Activity> addActivityToTrip(@PathVariable Long tripId, @RequestBody Activity activity) {
         try {
             Activity savedActivity = activityService.createActivity(tripId, activity);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedActivity);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
     // PUT /api/activities/{id} - Update activity (now with date validation)
     @PutMapping("/activities/{id}")
-    public ResponseEntity<?> updateActivity(@PathVariable Long id, @RequestBody Activity activityDetails) {
+    public ResponseEntity<Activity> updateActivity(@PathVariable Long id, @RequestBody Activity activityDetails) {
         try {
             Activity updatedActivity = activityService.updateActivity(id, activityDetails);
             return ResponseEntity.ok(updatedActivity);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

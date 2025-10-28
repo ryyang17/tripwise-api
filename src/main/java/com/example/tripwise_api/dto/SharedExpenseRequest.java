@@ -19,18 +19,14 @@ public class SharedExpenseRequest {
     // Constructors
     public SharedExpenseRequest() {}
 
-    public SharedExpenseRequest(String description, double amount, String currency, int categoryId,
-                               String expenseDate, int paidByParticipantId, List<Integer> splitWithParticipantIds, boolean splitEvenly,
-                               Map<Integer, Double> customSplits) {
+    public SharedExpenseRequest(String description, double amount, int categoryId,
+                               int paidByParticipantId, List<Integer> splitWithParticipantIds, boolean splitEvenly) {
         this.description = description;
         this.amount = amount;
-        this.currency = currency;
         this.categoryId = categoryId;
-        this.expenseDate = expenseDate;
         this.paidByParticipantId = paidByParticipantId;
         this.splitWithParticipantIds = splitWithParticipantIds;
         this.splitEvenly = splitEvenly;
-        this.customSplits = customSplits;
     }
 
     // Getters and Setters

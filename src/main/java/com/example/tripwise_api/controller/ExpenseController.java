@@ -1,9 +1,8 @@
 package com.example.tripwise_api.controller;
 
-import com.example.tripwise_api.Model.Expense;
-import com.example.tripwise_api.Service.ExpenseService;
+import com.example.tripwise_api.model.Expense;
+import com.example.tripwise_api.service.ExpenseService;
 import com.example.tripwise_api.dto.SharedExpenseRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +15,11 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class ExpenseController {
 
-    @Autowired
-    private ExpenseService expenseService;
+    private final ExpenseService expenseService;
+
+    public ExpenseController(ExpenseService expenseService) {
+        this.expenseService = expenseService;
+    }
 
     // GET /trips/{tripId}/expenses - All expenses for a trip
     @GetMapping("/trips/{tripId}/expenses")
@@ -44,7 +46,7 @@ public class ExpenseController {
 
     // POST /trips/{tripId}/expenses - Add new expense to trip
     @PostMapping("/trips/{tripId}/expenses")
-    public ResponseEntity<?> addExpense(
+    public ResponseEntity<Expense> addExpense(
             @PathVariable int tripId,
             @RequestBody Expense expenseDetails,
             @RequestParam(required = false) String targetCurrency) {
@@ -57,18 +59,18 @@ public class ExpenseController {
             }
             return ResponseEntity.status(HttpStatus.CREATED).body(expense);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
     // PUT /expenses/{id} - Update expense
     @PutMapping("/expenses/{id}")
-    public ResponseEntity<?> updateExpense(@PathVariable int id, @RequestBody Expense expenseDetails) {
+    public ResponseEntity<Expense> updateExpense(@PathVariable int id, @RequestBody Expense expenseDetails) {
         try {
             Expense expense = expenseService.updateExpense(id, expenseDetails);
             return ResponseEntity.ok(expense);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
@@ -85,20 +87,20 @@ public class ExpenseController {
 
     // POST /trips/{tripId}/shared-expenses - Add new shared expense
     @PostMapping("/trips/{tripId}/shared-expenses")
-    public ResponseEntity<?> addSharedExpense(
+    public ResponseEntity<Expense> addSharedExpense(
             @PathVariable int tripId,
             @RequestBody SharedExpenseRequest sharedExpenseData) {
         try {
             Expense expense = expenseService.createSharedExpense(tripId, sharedExpenseData);
             return ResponseEntity.status(HttpStatus.CREATED).body(expense);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
     // PUT /trips/{tripId}/shared-expenses/{expenseId} - Update shared expense
     @PutMapping("/trips/{tripId}/shared-expenses/{expenseId}")
-    public ResponseEntity<?> updateSharedExpense(
+    public ResponseEntity<Expense> updateSharedExpense(
             @PathVariable int tripId,
             @PathVariable int expenseId,
             @RequestBody SharedExpenseRequest sharedExpenseData) {
@@ -106,7 +108,7 @@ public class ExpenseController {
             Expense expense = expenseService.updateSharedExpense(tripId, expenseId, sharedExpenseData);
             return ResponseEntity.ok(expense);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }

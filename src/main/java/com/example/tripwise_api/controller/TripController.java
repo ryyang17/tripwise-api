@@ -1,9 +1,9 @@
 package com.example.tripwise_api.controller;
 
-import com.example.tripwise_api.Model.Trip;
-import com.example.tripwise_api.Model.TripParticipant;
-import com.example.tripwise_api.Service.TripService;
-import com.example.tripwise_api.Service.TripParticipantService;
+import com.example.tripwise_api.model.Trip;
+import com.example.tripwise_api.model.TripParticipant;
+import com.example.tripwise_api.service.TripService;
+import com.example.tripwise_api.service.TripParticipantService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

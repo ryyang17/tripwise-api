@@ -1,8 +1,7 @@
 package com.example.tripwise_api.controller;
 
-import com.example.tripwise_api.Model.Budget;
-import com.example.tripwise_api.Service.BudgetService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.tripwise_api.model.Budget;
+import com.example.tripwise_api.service.BudgetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class BudgetController {
 
-    @Autowired
-    private BudgetService budgetService;
+    private final BudgetService budgetService;
+
+    public BudgetController(BudgetService budgetService) {
+        this.budgetService = budgetService;
+    }
 
     // GET /trips/{tripId}/budget - Retrieve budget for a trip
     @GetMapping("/{tripId}/budget")
@@ -27,23 +29,23 @@ public class BudgetController {
 
     // POST /trips/{tripId}/budget - Create budget for a trip
     @PostMapping("/{tripId}/budget")
-    public ResponseEntity<?> createBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
+    public ResponseEntity<Budget> createBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
         try {
             Budget budget = budgetService.createBudget(tripId, budgetDetails);
             return ResponseEntity.status(HttpStatus.CREATED).body(budget);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
     // PUT /trips/{tripId}/budget - Update or create budget for a trip
     @PutMapping("/{tripId}/budget")
-    public ResponseEntity<?> updateOrCreateBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
+    public ResponseEntity<Budget> updateOrCreateBudget(@PathVariable int tripId, @RequestBody Budget budgetDetails) {
         try {
             Budget budget = budgetService.updateOrCreateBudget(tripId, budgetDetails);
             return ResponseEntity.ok(budget);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

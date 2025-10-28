@@ -1,7 +1,6 @@
 package com.example.tripwise_api.controller;
 
-import com.example.tripwise_api.Service.CurrencyService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.tripwise_api.service.CurrencyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +12,12 @@ import java.util.HashMap;
 @RequestMapping("/api/currency")
 @CrossOrigin(origins = "*")
 public class CurrencyController {
+    private final CurrencyService currencyService;
+    private static final String SUCCESS_KEY = "success";
 
-    @Autowired
-    private CurrencyService currencyService;
+    public CurrencyController(CurrencyService currencyService) {
+        this.currencyService = currencyService;
+    }
 
 
      // Get exchange rate between two currencies
@@ -32,12 +34,12 @@ public class CurrencyController {
             response.put("from", from.toUpperCase());
             response.put("to", to.toUpperCase());
             response.put("rate", rate);
-            response.put("success", true);
+            response.put(SUCCESS_KEY, true);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
+            errorResponse.put(SUCCESS_KEY, false);
             errorResponse.put("error", "Failed to get exchange rate: " + e.getMessage());
 
             return ResponseEntity.badRequest().body(errorResponse);
@@ -63,12 +65,12 @@ public class CurrencyController {
             response.put("fromCurrency", fromCurrency);
             response.put("toCurrency", toCurrency);
             response.put("exchangeRate", exchangeRate);
-            response.put("success", true);
+            response.put(SUCCESS_KEY, true);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
+            errorResponse.put(SUCCESS_KEY, false);
             errorResponse.put("error", "Failed to convert currency: " + e.getMessage());
 
             return ResponseEntity.badRequest().body(errorResponse);
@@ -82,7 +84,7 @@ public class CurrencyController {
     public ResponseEntity<Map<String, Object>> getSupportedCurrencies() {
         Map<String, Object> response = new HashMap<>();
         response.put("currencies", currencyService.getSupportedCurrencies());
-        response.put("success", true);
+        response.put(SUCCESS_KEY, true);
 
         return ResponseEntity.ok(response);
     }
@@ -97,7 +99,7 @@ public class CurrencyController {
 
         response.put("currencyCode", currencyCode.toUpperCase());
         response.put("isValid", isValid);
-        response.put("success", true);
+        response.put(SUCCESS_KEY, true);
 
         return ResponseEntity.ok(response);
     }

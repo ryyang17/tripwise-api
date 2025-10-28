@@ -10,6 +10,9 @@ class TripWiseApiApplicationTests {
 
     @Test
     void contextLoads() {
+        // This method is intentionally left empty.
+        // It is used to verify that the Spring application context loads successfully.
+        // If the context fails to load, this test will fail.
+        // No further implementation is required for this type of test.
     }
 }
-

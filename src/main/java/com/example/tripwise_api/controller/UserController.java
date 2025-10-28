@@ -1,8 +1,7 @@
 package com.example.tripwise_api.controller;
 
-import com.example.tripwise_api.Model.User;
-import com.example.tripwise_api.Service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.tripwise_api.model.User;
+import com.example.tripwise_api.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +16,11 @@ import java.util.HashMap;
 @CrossOrigin(origins = "*")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     // GET /api/users - All users
     @GetMapping
@@ -37,29 +39,29 @@ public class UserController {
 
     // POST /api/users - Create new user
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@RequestBody User user) {
         try {
             User savedUser = userService.createUser(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
     // PUT /api/users/{id} - Update existing user
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
         try {
             User updatedUser = userService.updateUser(id, userDetails);
             return ResponseEntity.ok(updatedUser);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
     // PATCH /api/users/{id}/currency - Update user's preferred currency only
     @PatchMapping("/{id}/currency")
-    public ResponseEntity<?> updateUserCurrency(@PathVariable Long id, @RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> updateUserCurrency(@PathVariable Long id, @RequestBody Map<String, String> request) {
         try {
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
@@ -77,7 +79,7 @@ public class UserController {
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }
