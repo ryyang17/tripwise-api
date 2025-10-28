@@ -18,13 +18,7 @@ sonarcloud-check:
   script:
     - sonar-scanner
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: always
-
+    - when: always
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -151,9 +145,4 @@ sonarcloud-gradle-check:
       -Dsonar.host.url=$SONAR_HOST_URL \
       -Dsonar.login=$SONAR_TOKEN
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: always
+    - when: always
