@@ -18,13 +18,7 @@ sonarcloud-check:
   script:
     - sonar-scanner
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: always
-
+    - when: always
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -35,7 +29,7 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
   SONAR_HOST_URL: "https://sonarcloud.io"
-  SONAR_TOKEN: "${SONAR_TOKEN}"
+  SONAR_TOKEN: "88f108700914cb6f3255362703a97e6345f20278"
   SONAR_PROJECT_KEY: "ruyi-group_s3-ip-tripwise-api"
   SONAR_ORGANIZATION: "ruyi-group"
 
@@ -151,9 +145,4 @@ sonarcloud-gradle-check:
       -Dsonar.host.url=$SONAR_HOST_URL \
       -Dsonar.login=$SONAR_TOKEN
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: always
+    - when: always
