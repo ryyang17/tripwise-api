@@ -58,3 +58,13 @@ flyway {
 	baselineOnMigrate = true
 }
 
+plugins {
+    id "org.sonarqube" version "7.0.1.6134"
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "ruyi-group_s3-ip-tripwise-api"
+        property "sonar.organization", "ruyi-group"
+    }
+}
