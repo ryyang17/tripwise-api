@@ -1,9 +1,9 @@
 stages:
   - build
   - test
+  - sonar
   - package
   - docker
-  - sonar
   - deploy
 
 variables:
@@ -62,6 +62,25 @@ test:
         coverage_format: cobertura
         path: build/reports/jacoco/test/jacocoTestReport.xml
 
+# quality gate check with SonarCloud
+sonarcloud-gradle-check:
+  stage: sonar
+  image: gradle:8.10-jdk17
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+      - .gradle/
+  before_script:
+    - chmod +x ./gradlew
+  script:
+    - ./gradlew sonarqube -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} -Dsonar.qualitygate.wait=true
+  needs:
+    - job: test
+      artifacts: true
+  rules:
+    - when: always
+
 package:
   stage: package
   image: gradle:8.10-jdk17
@@ -89,11 +108,14 @@ docker-image:
     - docker build -t "$IMAGE_NAME:$IMAGE_TAG" -t "$IMAGE_NAME:latest" .
     - docker push "$IMAGE_NAME:$IMAGE_TAG"
     - docker push "$IMAGE_NAME:latest"
+  needs:
+    - job: sonarcloud-gradle-check
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
       when: always
 
 # Deploy with docker compose; assumes target runner has Docker and docker-compose
+# to automate deployment
 deploy:
   stage: deploy
   image: docker:27.3.1
@@ -120,23 +142,4 @@ deploy:
   needs:
     - job: docker-image
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-
-sonarcloud-gradle-check:
-  stage: sonar
-  image: gradle:8.10-jdk17
-  cache:
-    key: "${CI_JOB_NAME}"
-    paths:
-      - .sonar/cache
-      - .gradle/
-  before_script:
-    - chmod +x ./gradlew
-  script:
-    - ./gradlew sonarqube -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN}
-  needs:
-    - job: test
-      artifacts: true
-  rules:
-    - when: always
+    - when: manual

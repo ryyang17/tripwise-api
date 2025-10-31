@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Component
 public class TripDAL {
-    // TripRepository is injected here. DAL uses it for all database operations.
+
     private final TripRepository tripRepository;
 
     public TripDAL(TripRepository tripRepository) {
