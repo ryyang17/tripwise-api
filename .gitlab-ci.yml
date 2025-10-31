@@ -1,5 +1,7 @@
 stages:
   - build
+  - unit-tests
+  - integration-tests
   - test
   - sonar
   - package
@@ -43,24 +45,66 @@ build:
       - build/classes/
     expire_in: 1 hour
 
-test:
-  stage: test
+# Fast unit tests with mocked dependencies - runs first for quick feedback
+unit-tests:
+  stage: unit-tests
   image: gradle:8.10-jdk17
   before_script:
     - chmod +x ./gradlew
   script:
-    - ./gradlew test -Dspring.profiles.active=test
-    - ./gradlew jacocoTestReport
+    - echo "Running isolated unit tests (DAL, Service, Controller layers)..."
+    - ./gradlew test --tests="*DALTest" --tests="*ServiceTest" --tests="*ControllerTest" -Dspring.profiles.active=test --no-daemon
+    - ./gradlew jacocoTestReport --no-daemon
   artifacts:
     when: always
     paths:
       - build/reports/jacoco/test/jacocoTestReport.xml
-      - build/reports/jacoco/test/html/
+      - build/test-results/test/TEST-*.xml
     reports:
       junit: build/test-results/test/TEST-*.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: build/reports/jacoco/test/jacocoTestReport.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: false
+
+# Integration tests with real database - tests layer collaboration
+integration-tests:
+  stage: integration-tests
+  image: gradle:8.10-jdk17
+  services:
+    - name: postgres:13
+      alias: postgres
+  variables:
+    POSTGRES_DB: tripwise_integration_test
+    POSTGRES_USER: test_user
+    POSTGRES_PASSWORD: test_password
+    POSTGRES_HOST_AUTH_METHOD: trust
+    SPRING_PROFILES_ACTIVE: integration-test
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tripwise_integration_test
+    SPRING_DATASOURCE_USERNAME: test_user
+    SPRING_DATASOURCE_PASSWORD: test_password
+  before_script:
+    - chmod +x ./gradlew
+    - apt-get update -qq && apt-get install -y -qq postgresql-client
+    - until pg_isready -h postgres -p 5432; do echo "Waiting for postgres..."; sleep 2; done
+  script:
+    - echo "Running integration tests with PostgreSQL database..."
+    - ./gradlew test --tests="*IntegrationTest" -Dspring.profiles.active=integration-test --no-daemon
+    - echo "Generating integration test coverage report..."
+    - ./gradlew jacocoTestReport --no-daemon
+  artifacts:
+    when: always
+    paths:
+      - build/reports/jacoco/test/jacocoTestReport.xml
+      - build/reports/tests/test/
+    reports:
+      junit: build/test-results/test/TEST-*.xml
+    expire_in: 3 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: false
 
 # quality gate check with SonarCloud
 sonarcloud-gradle-check:

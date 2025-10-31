@@ -50,6 +50,13 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
+
+	// Fix JVM warning about class sharing
+	jvmArgs '-Xshare:off'
+
+	// Additional JVM options for better test performance
+	maxHeapSize = '1g'
+	jvmArgs '-XX:+UseG1GC'
 }
 
 jacocoTestReport {
@@ -58,6 +65,36 @@ jacocoTestReport {
 		xml.required = true
 		html.required = true
 		csv.required = false
+	}
+
+	finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+	dependsOn jacocoTestReport
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.80 // 80% coverage minimum
+			}
+		}
+		rule {
+			element = 'CLASS'
+			limit {
+				counter = 'BRANCH'
+				value = 'COVEREDRATIO'
+				minimum = 0.70 // 70% branch coverage
+			}
+		}
+		rule {
+			element = 'CLASS'
+			excludes = [
+				'com.example.tripwise_api.TripWiseApiApplication',
+				'com.example.tripwise_api.dto.*',
+				'com.example.tripwise_api.model.*',
+				'com.example.tripwise_api.exception.*'
+			]
+		}
 	}
 }
 
