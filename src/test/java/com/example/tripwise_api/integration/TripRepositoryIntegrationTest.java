@@ -125,7 +125,7 @@ class TripRepositoryIntegrationTest {
     void deleteById_WithExistingTrip_ShouldRemoveFromDatabase() {
         // Arrange
         Trip persistedTrip = entityManager.persistAndFlush(testTrip1);
-        int tripId = persistedTrip.getTripId();
+        Integer tripId = persistedTrip.getTripId();
 
         // Verify trip exists
         assertTrue(tripRepository.existsById(tripId));
@@ -207,9 +207,11 @@ class TripRepositoryIntegrationTest {
         entityManager.flush();
 
         // Assert
-        assertNotNull(saved1.getTripId());
-        assertNotNull(saved2.getTripId());
-        assertNotEquals(saved1.getTripId(), saved2.getTripId());
+        Integer tripId1 = saved1.getTripId();
+        Integer tripId2 = saved2.getTripId();
+        assertNotNull(tripId1);
+        assertNotNull(tripId2);
+        assertNotEquals(tripId1, tripId2);
     }
 
     private Trip createTrip(String name, String destination, Long userId) {

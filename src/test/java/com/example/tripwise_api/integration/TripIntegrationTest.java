@@ -2,7 +2,6 @@ package com.example.tripwise_api.integration;
 
 import com.example.tripwise_api.dto.request.CreateTripRequest;
 import com.example.tripwise_api.dto.request.UpdateTripRequest;
-import com.example.tripwise_api.dto.response.TripResponse;
 import com.example.tripwise_api.model.Trip;
 import com.example.tripwise_api.repository.TripRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
