@@ -88,9 +88,10 @@ class TripRepositoryIntegrationTest {
         entityManager.clear(); // Clear the persistence context
 
         // Assert
-        assertNotNull(savedTrip.getTripId());
+        Integer tripId = savedTrip.getTripId();
+        assertNotNull(tripId);
 
-        Optional<Trip> retrievedTrip = tripRepository.findById(savedTrip.getTripId());
+        Optional<Trip> retrievedTrip = tripRepository.findById(tripId);
         assertTrue(retrievedTrip.isPresent());
         assertEquals("New Trip", retrievedTrip.get().getTripName());
         assertEquals("Eindhoven", retrievedTrip.get().getDestination());
