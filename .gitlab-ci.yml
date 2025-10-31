@@ -2,7 +2,6 @@ stages:
   - build
   - unit-tests
   - integration-tests
-  - test
   - sonar
   - package
   - docker
@@ -14,7 +13,7 @@ variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE/app
   IMAGE_TAG: $CI_COMMIT_SHA
 
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
   SONAR_HOST_URL: "https://sonarcloud.io"
   SONAR_TOKEN: "88f108700914cb6f3255362703a97e6345f20278"
@@ -45,7 +44,7 @@ build:
       - build/classes/
     expire_in: 1 hour
 
-# Fast unit tests with mocked dependencies - runs first for quick feedback
+# Fast unit tests with mocked dependencies
 unit-tests:
   stage: unit-tests
   image: gradle:8.10-jdk17
@@ -68,7 +67,7 @@ unit-tests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   allow_failure: false
 
-# Integration tests with real database - tests layer collaboration
+# Integration tests with real database
 integration-tests:
   stage: integration-tests
   image: gradle:8.10-jdk17
@@ -120,7 +119,7 @@ sonarcloud-gradle-check:
   script:
     - ./gradlew sonarqube -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} -Dsonar.qualitygate.wait=true
   needs:
-    - job: test
+    - job: integration-tests
       artifacts: true
   rules:
     - when: always
