@@ -78,8 +78,15 @@ public class TripService {
             throw new IllegalArgumentException("Trip name cannot be empty");
         }
 
-        if (trip.getStartDate() != null && trip.getEndDate() != null &&
-                trip.getStartDate().isAfter(trip.getEndDate())) {
+        if (trip.getStartDate() == null) {
+            throw new IllegalArgumentException("Start date is required");
+        }
+
+        if (trip.getEndDate() == null) {
+            throw new IllegalArgumentException("End date is required");
+        }
+
+        if (trip.getStartDate().isAfter(trip.getEndDate())) {
             throw new IllegalArgumentException("Start date cannot be after end date");
         }
 
