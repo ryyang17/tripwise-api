@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureWebMvc
-@ActiveProfiles("test")
+@ActiveProfiles("integration-test")
 @Transactional
 class TripIntegrationTest {
 

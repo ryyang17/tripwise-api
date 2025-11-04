@@ -90,7 +90,7 @@ integration-tests:
     - until pg_isready -h postgres -p 5432; do echo "Waiting for postgres..."; sleep 2; done
   script:
     - echo "Running integration tests with PostgreSQL database..."
-    - ./gradlew test --tests="*IntegrationTest" -Dspring.profiles.active=integration-test --no-daemon
+    - ./gradlew test --tests="*IntegrationTest" --no-daemon
     - echo "Generating integration test coverage report..."
     - ./gradlew jacocoTestReport --no-daemon
   artifacts:
