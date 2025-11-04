@@ -27,6 +27,10 @@ class CurrencyServiceTest {
     @InjectMocks
     private CurrencyService currencyService;
 
+    // Helper typed Class constant to avoid unchecked assignment warnings with Mockito matchers
+    @SuppressWarnings("rawtypes")
+    private static final Class MAP_CLASS = Map.class;
+
     @BeforeEach
     void setUp() {
         // Use reflection to inject the mocked RestTemplate
@@ -46,7 +50,7 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(BigDecimal.ONE, result);
-        verify(restTemplate, never()).getForObject(any(String.class), any(Class.class));
+        verify(restTemplate, never()).getForObject(any(String.class), any((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
@@ -55,7 +59,7 @@ class CurrencyServiceTest {
         Map<String, Object> mockResponse = Map.of(
             "rates", Map.of("EUR", 0.85)
         );
-        when(restTemplate.getForObject(eq("https://api.exchangerate-api.com/v4/latest/USD"), eq(Map.class)))
+        when(restTemplate.getForObject(eq("https://api.exchangerate-api.com/v4/latest/USD"), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenReturn(mockResponse);
 
         // Act
@@ -63,13 +67,13 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("0.850000"), result);
-        verify(restTemplate, times(1)).getForObject(eq("https://api.exchangerate-api.com/v4/latest/USD"), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(eq("https://api.exchangerate-api.com/v4/latest/USD"), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
     void getExchangeRate_WhenApiThrowsException_ShouldUseFallbackRate() {
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenThrow(new RestClientException("API unavailable"));
 
         // Act
@@ -77,7 +81,7 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("0.850000"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
@@ -86,7 +90,7 @@ class CurrencyServiceTest {
         Map<String, Object> mockResponse = Map.of(
             "rates", Map.of("GBP", 0.73) // EUR not included
         );
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenReturn(mockResponse);
 
         // Act
@@ -94,13 +98,13 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("0.850000"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
     void getExchangeRate_WithNullApiResponse_ShouldUseFallbackRate() {
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenReturn(null);
 
         // Act
@@ -108,7 +112,7 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("0.850000"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
@@ -118,7 +122,7 @@ class CurrencyServiceTest {
             "base", "USD"
             // missing "rates" key
         );
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenReturn(mockResponse);
 
         // Act
@@ -126,13 +130,13 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("0.850000"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
     void getExchangeRate_WithUnsupportedCurrencyInFallback_ShouldReturnOne() {
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenThrow(new RestClientException("API unavailable"));
 
         // Act
@@ -140,13 +144,13 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("1.000000"), result); // Changed from BigDecimal.ONE to match the actual precision
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
     void convertCurrency_WithValidAmount_ShouldReturnConvertedAmount() {
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenThrow(new RestClientException("Use fallback"));
 
         // Act
@@ -154,7 +158,7 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("85.00"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
@@ -173,13 +177,13 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("100.00"), result);
-        verify(restTemplate, never()).getForObject(any(String.class), any(Class.class));
+        verify(restTemplate, never()).getForObject(any(String.class), any((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
     void convertCurrency_WithComplexAmount_ShouldRoundCorrectly() {
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenThrow(new RestClientException("Use fallback"));
 
         // Act
@@ -187,7 +191,7 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("104.94"), result); // 123.456 * 0.85 = 104.9376, rounded to 104.94
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
@@ -245,7 +249,7 @@ class CurrencyServiceTest {
         // Rate should be 0.73/0.85 = 0.858824
 
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenThrow(new RestClientException("Use fallback"));
 
         // Act
@@ -253,7 +257,7 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("0.858824"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 
     @Test
@@ -262,7 +266,7 @@ class CurrencyServiceTest {
         // Rate should be 110.0/1.0 = 110.0
 
         // Arrange
-        when(restTemplate.getForObject(any(String.class), eq(Map.class)))
+        when(restTemplate.getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS)))
             .thenThrow(new RestClientException("Use fallback"));
 
         // Act
@@ -270,6 +274,6 @@ class CurrencyServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("110.000000"), result);
-        verify(restTemplate, times(1)).getForObject(any(String.class), eq(Map.class));
+        verify(restTemplate, times(1)).getForObject(any(String.class), eq((Class<Map>)(Class<?>) MAP_CLASS));
     }
 }
