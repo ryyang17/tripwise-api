@@ -18,7 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@ActiveProfiles("integration-test")
+@ActiveProfiles("test")
 class TripRepositoryIntegrationTest {
 
     @Autowired

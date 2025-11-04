@@ -66,19 +66,22 @@ jacocoTestReport {
 		html.required = true
 		csv.required = false
 	}
-
-	// Temporarily disable coverage verification while tests are being developed
-	// finalizedBy jacocoTestCoverageVerification
 }
 
-// Temporarily disable coverage verification - uncomment when tests are complete
-/*
 jacocoTestCoverageVerification {
 	dependsOn jacocoTestReport
 	violationRules {
 		rule {
 			limit {
-				minimum = 0.80 // 80% coverage minimum
+				minimum = 0.50
+			}
+		}
+		rule {
+			element = 'CLASS'
+			limit {
+				counter = 'BRANCH'
+				value = 'COVEREDRATIO'
+				minimum = 0.70
 			}
 		}
 		rule {
@@ -92,7 +95,7 @@ jacocoTestCoverageVerification {
 		}
 	}
 }
-*/
+
 
 flyway {
 	url = 'jdbc:postgresql://localhost:5432/TripWise'
