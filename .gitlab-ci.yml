@@ -1,10 +1,8 @@
 stages:
   - build
-  - unit-tests
-  - integration-tests
+  - test
   - sonar
   - package
-  - docker
   - deploy
 
 variables:
@@ -44,9 +42,9 @@ build:
       - build/classes/
     expire_in: 1 hour
 
-# Fast unit tests with mocked dependencies
+
 unit-tests:
-  stage: unit-tests
+  stage: test
   image: gradle:8.10-jdk17
   before_script:
     - chmod +x ./gradlew
@@ -68,29 +66,17 @@ unit-tests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   allow_failure: false
 
-# Integration tests with real database
+
 integration-tests:
-  stage: integration-tests
+  stage: test
   image: gradle:8.10-jdk17
-  services:
-    - name: postgres:13
-      alias: postgres
   variables:
-    POSTGRES_DB: tripwise_integration_test
-    POSTGRES_USER: test_user
-    POSTGRES_PASSWORD: test_password
-    POSTGRES_HOST_AUTH_METHOD: trust
     SPRING_PROFILES_ACTIVE: integration-test
-    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tripwise_integration_test
-    SPRING_DATASOURCE_USERNAME: test_user
-    SPRING_DATASOURCE_PASSWORD: test_password
   before_script:
     - chmod +x ./gradlew
-    - apt-get update -qq && apt-get install -y -qq postgresql-client
-    - until pg_isready -h postgres -p 5432; do echo "Waiting for postgres..."; sleep 2; done
   script:
-    - echo "Running integration tests with PostgreSQL database..."
-    - ./gradlew test --tests="*IntegrationTest" --no-daemon
+    - echo "Running integration tests with in-memory H2 database..."
+    - ./gradlew test --tests="*IntegrationTest" -Dspring.profiles.active=integration-test --no-daemon
     - echo "Generating integration test coverage report..."
     - ./gradlew jacocoTestReport --no-daemon
   artifacts:
@@ -140,7 +126,7 @@ package:
 
 # Build and push Docker image that will be used by docker-compose in deploy
 docker-image:
-  stage: docker
+  stage: deploy
   image: docker:27.3.1
   services:
     - docker:27.3.1-dind
@@ -159,7 +145,6 @@ docker-image:
       when: always
 
 # Deploy with docker compose; assumes target runner has Docker and docker-compose
-# to automate deployment
 deploy:
   stage: deploy
   image: docker:27.3.1
