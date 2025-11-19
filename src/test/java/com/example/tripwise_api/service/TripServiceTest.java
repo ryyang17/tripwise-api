@@ -1,7 +1,7 @@
 package com.example.tripwise_api.service;
 
 import com.example.tripwise_api.dal.TripDAL;
-import com.example.tripwise_api.exception.TripNotFoundException;
+import com.example.tripwise_api.service.exception.TripNotFoundException;
 import com.example.tripwise_api.model.Trip;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

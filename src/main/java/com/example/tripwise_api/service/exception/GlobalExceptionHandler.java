@@ -1,4 +1,4 @@
-package com.example.tripwise_api.exception;
+package com.example.tripwise_api.service.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

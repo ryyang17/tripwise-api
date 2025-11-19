@@ -4,7 +4,7 @@ import com.example.tripwise_api.dto.mapper.TripMapper;
 import com.example.tripwise_api.dto.request.CreateTripRequest;
 import com.example.tripwise_api.dto.request.UpdateTripRequest;
 import com.example.tripwise_api.dto.response.TripResponse;
-import com.example.tripwise_api.exception.TripNotFoundException;
+import com.example.tripwise_api.service.exception.TripNotFoundException;
 import com.example.tripwise_api.model.Trip;
 import com.example.tripwise_api.service.TripService;
 import org.junit.jupiter.api.BeforeEach;

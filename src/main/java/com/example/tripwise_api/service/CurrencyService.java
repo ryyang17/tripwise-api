@@ -1,6 +1,6 @@
 package com.example.tripwise_api.service;
 
-import com.example.tripwise_api.exception.CurrencyNotFoundException;
+import com.example.tripwise_api.service.exception.CurrencyNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
