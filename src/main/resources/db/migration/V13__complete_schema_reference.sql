@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS activity (
     location VARCHAR(255),
     estimated_cost NUMERIC(12,2),
     created_date TIMESTAMP DEFAULT NOW(),
-    date DATE
+    activity_date DATE
 );
 
 CREATE TABLE IF NOT EXISTS trip_participant (
@@ -90,7 +90,6 @@ CREATE TABLE IF NOT EXISTS expense_share (
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_activity_trip_date ON activity(trip_id, date);
 CREATE INDEX IF NOT EXISTS idx_expense_trip_id ON expense(trip_id);
 CREATE INDEX IF NOT EXISTS idx_trip_user_id ON trip(user_id);
 CREATE INDEX IF NOT EXISTS idx_trip_participant_trip_user ON trip_participant(trip_id, user_id);
