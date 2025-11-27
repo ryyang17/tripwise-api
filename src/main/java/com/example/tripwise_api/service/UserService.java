@@ -2,6 +2,7 @@ package com.example.tripwise_api.service;
 
 import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.dal.UserDAL;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import java.util.Optional;
 @Transactional
 public class UserService {
     private final UserDAL userDAL;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserDAL userDAL) {
+    public UserService(UserDAL userDAL, PasswordEncoder passwordEncoder) {
         this.userDAL = userDAL;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -28,9 +31,46 @@ public class UserService {
         return userDAL.getUserById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<User> findByUsername(String username) {
+        return userDAL.findByUsername(username);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<User> findByEmail(String email) {
+        return userDAL.findByEmail(email);
+    }
+
     public User createUser(User user) {
         user.setCreatedDate(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userDAL.saveUser(user);
+    }
+
+    public User registerUser(String username, String email, String password) {
+        // Check if username already exists
+        if (userDAL.findByUsername(username).isPresent()) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+
+        // Check if email already exists
+        if (userDAL.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        User user = new User(username, email, password);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setCreatedDate(LocalDateTime.now());
+        return userDAL.saveUser(user);
+    }
+
+    public boolean authenticateUser(String username, String password) {
+        Optional<User> userOpt = userDAL.findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return passwordEncoder.matches(password, user.getPassword());
+        }
+        return false;
     }
 
     public User updateUser(Long id, User userDetails) {
@@ -40,7 +80,7 @@ public class UserService {
         user.setUsername(userDetails.getUsername());
         user.setEmail(userDetails.getEmail());
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            user.setPassword(userDetails.getPassword());
+            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         }
         user.setBio(userDetails.getBio());
         user.setLocation(userDetails.getLocation());

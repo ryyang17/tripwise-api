@@ -21,7 +21,7 @@ public class Activity {
 
     private String description;
 
-    @Column(name = "date")
+    @Column(name = "activity_date")
     private LocalDate date; // NEW FIELD - simple date
 
     @Column(name = "time")
