@@ -61,12 +61,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/users - All users
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
-    }
 
     // GET /api/users/{id} - Get user by ID
     @GetMapping("/{id}")
