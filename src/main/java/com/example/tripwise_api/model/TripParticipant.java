@@ -14,8 +14,13 @@ public class TripParticipant {
     @Column(name = "trip_id", nullable = false)
     private Integer tripId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false, insertable = false, updatable = false)
     private Long userId;
+
+    // Add ManyToOne relationship to User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "role", length = 50)
     private String role;
@@ -38,8 +43,24 @@ public class TripParticipant {
     public Integer getTripId() { return tripId; }
     public void setTripId(Integer tripId) { this.tripId = tripId; }
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public Long getUserId() { return user != null ? user.getId() : userId; }
+    public void setUserId(Long userId) {
+        this.userId = userId;
+        // Create a User proxy with just the ID to satisfy the not-null constraint
+        // This is useful for tests and cases where we only have the userId
+        if (userId != null && this.user == null) {
+            this.user = new User();
+            this.user.setId(userId);
+        }
+    }
+
+    public User getUser() { return user; }
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null) {
+            this.userId = user.getId();
+        }
+    }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
@@ -47,4 +68,3 @@ public class TripParticipant {
     public LocalDateTime getJoinedDate() { return joinedDate; }
     public void setJoinedDate(LocalDateTime joinedDate) { this.joinedDate = joinedDate; }
 }
-

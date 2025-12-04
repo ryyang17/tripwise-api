@@ -8,10 +8,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,6 +23,24 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    // GET /api/users - Get all users (for dropdown, trip participants)
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+
+        List<Map<String, Object>> userList = users.stream()
+                .map(user -> {
+                    Map<String, Object> userInfo = new HashMap<>();
+                    userInfo.put("id", user.getId());
+                    userInfo.put("username", user.getUsername());
+                    userInfo.put("email", user.getEmail());
+                    return userInfo;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(userList);
     }
 
     // GET /api/users/me - Get current authenticated user
@@ -105,9 +124,7 @@ public class UserController {
             user.setCurrency(request.get("currency"));
             User updatedUser = userService.updateUser(id, user);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Currency preference updated successfully");
+            Map<String, Object> response = buildSuccessResponse("Currency preference updated successfully");
             response.put("currency", updatedUser.getCurrency());
 
             return ResponseEntity.ok(response);
@@ -151,9 +168,7 @@ public class UserController {
 
             User updatedUser = userService.updateUser(id, user);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Profile updated successfully");
+            Map<String, Object> response = buildSuccessResponse("Profile updated successfully");
             response.put("user", createUserResponse(updatedUser));
 
             return ResponseEntity.ok(response);
@@ -169,15 +184,21 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "User deleted successfully");
+            Map<String, Object> response = buildSuccessResponse("User deleted successfully");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
+    }
+
+    // Helper to build a standard success response map
+    private Map<String, Object> buildSuccessResponse(String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", message);
+        return response;
     }
 
     // Helper method to create user response without password

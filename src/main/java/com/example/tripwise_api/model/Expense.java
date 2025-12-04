@@ -37,9 +37,13 @@ public class Expense {
     private String receiptUrl;
     private boolean isValidated = false;
 
-    // New: which user paid this expense (app_user.user_id)
     @Column(name = "paid_by")
     private Long paidBy;
+
+    // Add ManyToOne relationship to User for who paid
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paid_by")
+    private User paidByUser;
 
     // Transient helper fields used when creating/updating expenses via API
     @Transient
@@ -111,6 +115,9 @@ public class Expense {
 
     public Long getPaidBy() { return paidBy; }
     public void setPaidBy(Long paidBy) { this.paidBy = paidBy; }
+
+    public User getPaidByUser() { return paidByUser; }
+    public void setPaidByUser(User paidByUser) { this.paidByUser = paidByUser; }
 
     public List<Long> getSplitWithUserIds() { return splitWithUserIds; }
     public void setSplitWithUserIds(List<Long> splitWithUserIds) { this.splitWithUserIds = splitWithUserIds; }

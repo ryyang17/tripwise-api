@@ -92,7 +92,7 @@ public class TripController {
     public ResponseEntity<TripParticipantResponse> addParticipant(
             @PathVariable Integer id,
             @Valid @RequestBody CreateParticipantRequest request) {
-        TripParticipant participant = TripParticipantMapper.toEntity(request, id);
+        TripParticipant participant = tripParticipantMapper.toEntity(request, id);
         TripParticipant savedParticipant = tripParticipantService.addParticipant(participant);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tripParticipantMapper.toResponse(savedParticipant));

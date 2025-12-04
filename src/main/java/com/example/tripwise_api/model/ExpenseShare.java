@@ -14,8 +14,13 @@ public class ExpenseShare {
     @Column(name = "expense_id", nullable = false)
     private Integer expenseId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private Long userId;
+
+    // Add ManyToOne relationship to User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "amount", precision = 19, scale = 4, nullable = false)
     private BigDecimal amount;
@@ -41,10 +46,17 @@ public class ExpenseShare {
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
+    public User getUser() { return user; }
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null) {
+            this.userId = user.getId();
+        }
+    }
+
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
 
     public Boolean getIsSettled() { return isSettled; }
     public void setIsSettled(Boolean isSettled) { this.isSettled = isSettled; }
 }
-

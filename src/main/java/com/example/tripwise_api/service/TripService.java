@@ -1,6 +1,8 @@
 package com.example.tripwise_api.service;
 
 import com.example.tripwise_api.model.Trip;
+import com.example.tripwise_api.model.TripParticipant;
+import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.dal.TripDAL;
 import com.example.tripwise_api.service.exception.TripNotFoundException;
 import org.springframework.stereotype.Service;
@@ -13,9 +15,13 @@ import java.util.Optional;
 @Transactional
 public class TripService {
     private final TripDAL tripDAL;
+    private final TripParticipantService tripParticipantService;
+    private final UserService userService;
 
-    public TripService(TripDAL tripDAL) {
+    public TripService(TripDAL tripDAL, TripParticipantService tripParticipantService, UserService userService) {
         this.tripDAL = tripDAL;
+        this.tripParticipantService = tripParticipantService;
+        this.userService = userService;
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +47,21 @@ public class TripService {
     public Trip createTrip(Trip trip) {
         validateTrip(trip);
         // Save operation is handled by DAL
-        return tripDAL.saveTrip(trip);
+        Trip savedTrip = tripDAL.saveTrip(trip);
+
+        // Automatically add the trip creator as a participant with "owner" role
+        Optional<User> userOpt = userService.getUserById(trip.getUserId());
+        if (userOpt.isPresent()) {
+            TripParticipant participant = new TripParticipant();
+            participant.setTripId(savedTrip.getTripId());
+            participant.setUser(userOpt.get()); // Set the User entity instead of just userId
+            participant.setRole("owner"); // Set as owner since they created the trip
+            tripParticipantService.addParticipant(participant);
+        } else {
+            throw new IllegalArgumentException("User not found with ID: " + trip.getUserId());
+        }
+
+        return savedTrip;
     }
 
 

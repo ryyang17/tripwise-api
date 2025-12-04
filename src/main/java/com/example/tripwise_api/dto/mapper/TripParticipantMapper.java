@@ -43,10 +43,17 @@ public class TripParticipantMapper {
         response.setRole(participant.getRole());
         response.setJoinedDate(participant.getJoinedDate());
 
-        // Fetch user details via UserService
-        Optional<User> userOpt = userService.getUserById(participant.getUserId());
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
+        // Use the User relationship from TripParticipant if available (more efficient)
+        User user = participant.getUser();
+        if (user == null) {
+            // Fallback to fetching user via UserService if relationship not loaded
+            Optional<User> userOpt = userService.getUserById(participant.getUserId());
+            if (userOpt.isPresent()) {
+                user = userOpt.get();
+            }
+        }
+
+        if (user != null) {
             response.setUserName(user.getUsername());
             response.setUserEmail(user.getEmail());
         }
@@ -76,7 +83,7 @@ public class TripParticipantMapper {
     /**
      * Convert CreateParticipantRequest naar TripParticipant entity
      */
-    public static TripParticipant toEntity(CreateParticipantRequest request, Integer tripId) {
+    public TripParticipant toEntity(CreateParticipantRequest request, Integer tripId) {
         if (request == null) return null;
 
         TripParticipant participant = new TripParticipant();
@@ -84,8 +91,13 @@ public class TripParticipantMapper {
         participant.setUserId(request.getUserId());
         participant.setRole(request.getRole());
 
-        // userName, userEmail, isOwner worden niet opgeslagen in participant entity
-        // maar kunnen worden gebruikt voor validatie of logging
+        // Load and set the User entity to prevent null reference error
+        Optional<User> userOpt = userService.getUserById(request.getUserId());
+        if (userOpt.isPresent()) {
+            participant.setUser(userOpt.get());
+        } else {
+            throw new RuntimeException("User not found with ID: " + request.getUserId());
+        }
 
         return participant;
     }

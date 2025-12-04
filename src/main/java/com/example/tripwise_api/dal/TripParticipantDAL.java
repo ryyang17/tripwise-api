@@ -23,8 +23,23 @@ public class TripParticipantDAL {
         return repository.findByTripId(tripId);
     }
 
+    // New method: Get participants with user details efficiently loaded
+    public List<TripParticipant> getParticipantsByTripIdWithUserDetails(Integer tripId) {
+        return repository.findByTripIdWithUser(tripId);
+    }
+
     public Optional<TripParticipant> getParticipantById(Integer id) {
         return repository.findById(id);
+    }
+
+    // New method: Find participant by trip and user
+    public Optional<TripParticipant> findByTripIdAndUserId(Integer tripId, Long userId) {
+        return repository.findByTripIdAndUserId(tripId, userId);
+    }
+
+    // New method: Check if user is participant
+    public boolean existsByTripIdAndUserId(Integer tripId, Long userId) {
+        return repository.existsByTripIdAndUserId(tripId, userId);
     }
 
     public void deleteParticipant(Integer id) {

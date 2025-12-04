@@ -22,8 +22,18 @@ public class ExpenseShareDAL {
         return repository.findByExpenseId(expenseId);
     }
 
+    // New method: Get shares with user details efficiently loaded
+    public List<ExpenseShare> getSharesByExpenseIdWithUserDetails(Integer expenseId) {
+        return repository.findByExpenseIdWithUser(expenseId);
+    }
+
     public List<ExpenseShare> getSharesByUserId(Long userId) {
         return repository.findByUserId(userId);
+    }
+
+    // New method: Get unsettled shares for user
+    public List<ExpenseShare> getUnsettledSharesByUserId(Long userId) {
+        return repository.findUnsettledByUserId(userId);
     }
 
     public void deleteSharesByExpenseId(Integer expenseId) {
