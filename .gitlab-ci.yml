@@ -171,4 +171,6 @@ deploy:
   needs:
     - job: docker-image
   rules:
-    - when: manual
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: always
+    - when: never
