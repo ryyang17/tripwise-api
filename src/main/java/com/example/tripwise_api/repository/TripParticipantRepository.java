@@ -10,7 +10,6 @@ import java.util.Optional;
 
 public interface TripParticipantRepository extends JpaRepository<TripParticipant, Integer> {
     List<TripParticipant> findByTripId(Integer tripId);
-    List<TripParticipant> findByUserId(Long userId);
 
     // Find participant by trip and user - useful for shared expense validation
     Optional<TripParticipant> findByTripIdAndUserId(Integer tripId, Long userId);

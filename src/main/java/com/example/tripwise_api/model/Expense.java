@@ -37,7 +37,7 @@ public class Expense {
     private String receiptUrl;
     private boolean isValidated = false;
 
-    @Column(name = "paid_by")
+    @Column(name = "paid_by", insertable = false, updatable = false)
     private Long paidBy;
 
     // Add ManyToOne relationship to User for who paid

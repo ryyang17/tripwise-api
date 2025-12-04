@@ -7,12 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @Transactional
+@SuppressWarnings("unused")
 public class ExpenseShareService {
 
     private final ExpenseShareDAL expenseShareDAL;
@@ -37,16 +39,14 @@ public class ExpenseShareService {
         participantService.validateUsersAreParticipants(tripId, userIds);
 
         // Calculate equal shares
-        BigDecimal shareAmount = totalAmount.divide(new BigDecimal(userIds.size()), 2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal shareAmount = totalAmount.divide(new BigDecimal(userIds.size()), 2, RoundingMode.HALF_UP);
 
-        List<ExpenseShare> shares = userIds.stream()
+        return userIds.stream()
             .map(userId -> {
                 ExpenseShare share = new ExpenseShare(expenseId, userId, shareAmount);
                 return expenseShareDAL.saveShare(share);
             })
             .toList();
-
-        return shares;
     }
 
     /**
@@ -58,14 +58,12 @@ public class ExpenseShareService {
         // Validate all users are participants
         participantService.validateUsersAreParticipants(tripId, userAmounts.keySet().stream().toList());
 
-        List<ExpenseShare> shares = userAmounts.entrySet().stream()
+        return userAmounts.entrySet().stream()
             .map(entry -> {
                 ExpenseShare share = new ExpenseShare(expenseId, entry.getKey(), entry.getValue());
                 return expenseShareDAL.saveShare(share);
             })
             .toList();
-
-        return shares;
     }
 
     /**
@@ -157,6 +155,7 @@ public class ExpenseShareService {
     /**
      * DTO for user share summary
      */
+    @SuppressWarnings("unused")
     public static class UserShareSummary {
         private final Long userId;
         private final BigDecimal totalOwed;

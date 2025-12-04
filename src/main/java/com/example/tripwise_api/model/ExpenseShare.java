@@ -14,7 +14,7 @@ public class ExpenseShare {
     @Column(name = "expense_id", nullable = false)
     private Integer expenseId;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", insertable = false, updatable = false)
     private Long userId;
 
     // Add ManyToOne relationship to User
