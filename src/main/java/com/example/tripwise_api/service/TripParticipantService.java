@@ -78,4 +78,8 @@ public class TripParticipantService {
     public void removeParticipant(Integer id) {
         dal.deleteParticipant(id);
     }
+
+    public void deleteParticipantsByTripId(Integer tripId) {
+        dal.deleteParticipantsByTripId(tripId);
+    }
 }

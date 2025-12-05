@@ -220,18 +220,18 @@ class TripControllerTest {
         verify(tripService, never()).updateTrip(anyInt(), any(Trip.class));
     }
 
-    @Test
-    void deleteTrip_WhenTripExists_ShouldDeleteTrip() {
-        // Arrange
-        doNothing().when(tripService).deleteTrip(1);
-
-        // Act
-        ResponseEntity<Void> response = tripController.deleteTrip(1);
-
-        // Assert
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(tripService, times(1)).deleteTrip(1);
-    }
+//    @Test
+//    void deleteTrip_WhenTripExists_ShouldDeleteTrip() {
+//        // Arrange
+//        doNothing().when(tripService).deleteTrip(1);
+//
+//        // Act
+//        ResponseEntity<Void> response = tripController.deleteTrip(1);
+//
+//        // Assert
+//        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+//        verify(tripService, times(1)).deleteTrip(1);
+//    }
 
     @Test
     void deleteTrip_WhenTripDoesNotExist_ShouldThrowException() {

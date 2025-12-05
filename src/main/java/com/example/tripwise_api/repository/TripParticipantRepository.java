@@ -17,6 +17,9 @@ public interface TripParticipantRepository extends JpaRepository<TripParticipant
     // Check if a user is a participant in a trip
     boolean existsByTripIdAndUserId(Integer tripId, Long userId);
 
+    // Bulk delete participants by trip id
+    void deleteByTripId(Integer tripId);
+
     // Get all participants with their user details eagerly loaded
     @Query("SELECT tp FROM TripParticipant tp JOIN FETCH tp.user WHERE tp.tripId = :tripId")
     List<TripParticipant> findByTripIdWithUser(@Param("tripId") Integer tripId);

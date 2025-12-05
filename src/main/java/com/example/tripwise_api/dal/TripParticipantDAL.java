@@ -46,5 +46,10 @@ public class TripParticipantDAL {
         repository.deleteById(id);
     }
 
+    // Bulk delete participants by trip id
+    public void deleteParticipantsByTripId(Integer tripId) {
+        repository.deleteByTripId(tripId);
+    }
+
     public boolean existsById(Integer id) { return repository.existsById(id); }
 }

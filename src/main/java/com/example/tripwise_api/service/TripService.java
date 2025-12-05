@@ -89,6 +89,11 @@ public class TripService {
         if (!tripDAL.existsById(id)) {
             throw new TripNotFoundException("Trip not found with id: " + id);
         }
+
+        // First remove all participants referencing this trip to avoid FK constraint violations
+        tripParticipantService.deleteParticipantsByTripId(id);
+
+        // Then delete the trip itself
         tripDAL.deleteTrip(id);
     }
 
