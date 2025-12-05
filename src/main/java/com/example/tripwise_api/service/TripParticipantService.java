@@ -28,7 +28,7 @@ public class TripParticipantService {
         return dal.getParticipantsByTripId(tripId);
     }
 
-    // New method: Get participants with user details efficiently loaded
+    // Get participants with user details efficiently loaded
     @Transactional(readOnly = true)
     public List<TripParticipant> getParticipantsByTripIdWithUserDetails(Integer tripId) {
         return repository.findByTripIdWithUser(tripId);
@@ -38,19 +38,7 @@ public class TripParticipantService {
         return dal.getParticipantById(id);
     }
 
-    // New method: Check if user is participant of trip (for shared expense validation)
-    @Transactional(readOnly = true)
-    public boolean isUserParticipantOfTrip(Integer tripId, Long userId) {
-        return repository.existsByTripIdAndUserId(tripId, userId);
-    }
-
-    // New method: Get participant by trip and user (for shared expense creation)
-    @Transactional(readOnly = true)
-    public Optional<TripParticipant> getParticipantByTripAndUser(Integer tripId, Long userId) {
-        return repository.findByTripIdAndUserId(tripId, userId);
-    }
-
-    // New method: Validate multiple users are participants (for shared expenses)
+    // Validate multiple users are participants (for shared expenses)
     @Transactional(readOnly = true)
     public void validateUsersAreParticipants(Integer tripId, List<Long> userIds) {
         for (Long userId : userIds) {

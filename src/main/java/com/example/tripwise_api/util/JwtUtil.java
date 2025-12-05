@@ -39,11 +39,6 @@ public class JwtUtil {
         return createToken(claims, username, refreshTokenExpiration);
     }
 
-    // Legacy method for backward compatibility
-    public String generateToken(String username) {
-        return generateAccessToken(username);
-    }
-
     private String createToken(Map<String, Object> claims, String subject, Long expiration) {
         return Jwts.builder()
                 .setClaims(claims)

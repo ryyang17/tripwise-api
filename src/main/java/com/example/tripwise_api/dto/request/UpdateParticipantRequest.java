@@ -9,8 +9,6 @@ public class UpdateParticipantRequest {
     private Boolean isOwner = false;
 
     // Constructors
-    public UpdateParticipantRequest() {}
-
     public UpdateParticipantRequest(String role, Boolean isOwner) {
         this.role = role;
         this.isOwner = isOwner;

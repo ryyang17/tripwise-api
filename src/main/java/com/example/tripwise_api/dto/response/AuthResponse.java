@@ -1,12 +1,12 @@
 package com.example.tripwise_api.dto.response;
 
+@SuppressWarnings("unused")
 public class AuthResponse {
 
     private String accessToken;
     private String username;
     private String message;
 
-    public AuthResponse() {}
 
     public AuthResponse(String accessToken, String username, String message) {
         this.accessToken = accessToken;
@@ -18,17 +18,9 @@ public class AuthResponse {
         return accessToken;
     }
 
+    @SuppressWarnings("unused")
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
-    }
-
-    // Legacy getter for backward compatibility
-    public String getToken() {
-        return accessToken;
-    }
-
-    public void setToken(String token) {
-        this.accessToken = token;
     }
 
     public String getUsername() {
