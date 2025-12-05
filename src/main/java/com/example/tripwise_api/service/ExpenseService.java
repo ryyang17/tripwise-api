@@ -4,6 +4,7 @@ import com.example.tripwise_api.model.Expense;
 import com.example.tripwise_api.model.ExpenseShare;
 import com.example.tripwise_api.model.ExpenseCategory;
 import com.example.tripwise_api.model.TripParticipant;
+import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.dal.ExpenseDAL;
 import com.example.tripwise_api.dal.ExpenseShareDAL;
 import com.example.tripwise_api.dto.request.SharedExpenseRequest;
@@ -23,19 +24,22 @@ public class ExpenseService {
     private final ExpenseShareDAL expenseShareDAL;
     private final ExpenseCategoryService expenseCategoryService;
     private final TripParticipantService tripParticipantService;
+    private final UserService userService;
 
     public ExpenseService(
         ExpenseDAL expenseDAL,
         CurrencyService currencyService,
         ExpenseShareDAL expenseShareDAL,
         ExpenseCategoryService expenseCategoryService,
-        TripParticipantService tripParticipantService
+        TripParticipantService tripParticipantService,
+        UserService userService
     ) {
         this.expenseDAL = expenseDAL;
         this.currencyService = currencyService;
         this.expenseShareDAL = expenseShareDAL;
         this.expenseCategoryService = expenseCategoryService;
         this.tripParticipantService = tripParticipantService;
+        this.userService = userService;
     }
 
     @Transactional(readOnly = true)
@@ -208,7 +212,12 @@ public class ExpenseService {
         BigDecimal shareAmount = total.divide(new BigDecimal(participants), 2, RoundingMode.HALF_UP);
 
         for (Long userId : participantSet) {
+            // Fetch the User entity to properly set the relationship
+            User user = userService.getUserById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
             ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);
+            share.setUser(user); // Set the User object to satisfy the @ManyToOne(nullable = false) constraint
             expenseShareDAL.saveShare(share);
         }
     }
@@ -323,7 +332,13 @@ public class ExpenseService {
                 BigDecimal shareAmount = BigDecimal.valueOf(customAmount);
                 totalCustomAmount = totalCustomAmount.add(shareAmount);
                 Long userId = participantIdToUserIdMap.get(participantId);
+
+                // Fetch the User entity to properly set the relationship
+                User user = userService.getUserById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
                 ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);
+                share.setUser(user); // Set the User object to satisfy the @ManyToOne(nullable = false) constraint
                 expenseShareDAL.saveShare(share);
             }
         }
@@ -339,7 +354,13 @@ public class ExpenseService {
         BigDecimal shareAmount = total.divide(new BigDecimal(participantIds.size()), 2, RoundingMode.HALF_UP);
         for (Integer participantId : participantIds) {
             Long userId = participantIdToUserIdMap.get(participantId);
+
+            // Fetch the User entity to properly set the relationship
+            User user = userService.getUserById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
             ExpenseShare share = new ExpenseShare(savedExpense.getExpenseId(), userId, shareAmount);
+            share.setUser(user); // Set the User object to satisfy the @ManyToOne(nullable = false) constraint
             expenseShareDAL.saveShare(share);
         }
     }

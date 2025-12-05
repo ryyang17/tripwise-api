@@ -17,19 +17,34 @@ public class JwtUtil {
     @Value("${jwt.secret:mySecretKey}")
     private String secret;
 
-    @Value("${jwt.expiration:86400000}")
-    private Long expiration;
+    @Value("${jwt.access-token.expiration:900000}")  // 15 minutes
+    private Long accessTokenExpiration;
+
+    @Value("${jwt.refresh-token.expiration:2592000000}")  // 30 days
+    private Long refreshTokenExpiration;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        claims.put("type", "access");
+        return createToken(claims, username, accessTokenExpiration);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    public String generateRefreshToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+        return createToken(claims, username, refreshTokenExpiration);
+    }
+
+    // Legacy method for backward compatibility
+    public String generateToken(String username) {
+        return generateAccessToken(username);
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, Long expiration) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
@@ -45,6 +60,10 @@ public class JwtUtil {
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("type", String.class));
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -67,5 +86,23 @@ public class JwtUtil {
     public Boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+
+    public Boolean validateAccessToken(String token, String username) {
+        try {
+            String tokenType = extractTokenType(token);
+            return "access".equals(tokenType) && validateToken(token, username);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Boolean validateRefreshToken(String token, String username) {
+        try {
+            String tokenType = extractTokenType(token);
+            return "refresh".equals(tokenType) && validateToken(token, username);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

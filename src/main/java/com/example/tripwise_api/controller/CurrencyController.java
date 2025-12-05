@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/currency")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class CurrencyController {
     private final CurrencyService currencyService;
     private static final String SUCCESS_KEY = "success";

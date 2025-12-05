@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class ExpenseController {
 
     private final ExpenseService expenseService;

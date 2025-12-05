@@ -60,6 +60,33 @@ public class TripParticipantService {
         }
     }
 
+    public TripParticipant updateParticipant(Integer participantId, String role, Boolean isOwner) {
+        Optional<TripParticipant> existingParticipant = dal.getParticipantById(participantId);
+
+        if (existingParticipant.isEmpty()) {
+            throw new IllegalArgumentException("Participant not found with id: " + participantId);
+        }
+
+        TripParticipant participant = existingParticipant.get();
+
+        // If isOwner is true, set role to "owner", otherwise use the provided role
+        if (isOwner != null && isOwner) {
+            participant.setRole("owner");
+        } else {
+            participant.setRole(role);
+        }
+
+        // Save and then return with user details properly loaded
+        TripParticipant savedParticipant = dal.saveParticipant(participant);
+
+        // Fetch the updated participant with user details to avoid lazy loading issues
+        return repository.findByTripIdWithUser(savedParticipant.getTripId())
+                .stream()
+                .filter(p -> p.getId().equals(participantId))
+                .findFirst()
+                .orElse(savedParticipant);
+    }
+
     public void removeParticipant(Integer id) {
         dal.deleteParticipant(id);
     }

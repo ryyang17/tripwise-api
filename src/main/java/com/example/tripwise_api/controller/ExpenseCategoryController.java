@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class ExpenseCategoryController {
 
     private final ExpenseCategoryService categoryService;

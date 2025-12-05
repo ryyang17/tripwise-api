@@ -57,6 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.debug("Extracted username from JWT: " + username);
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 logger.warn("JWT token is expired for request to: " + requestURI);
+                // Return 401 for expired access token to trigger refresh
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"Access token expired\",\"message\":\"Please refresh your token\"}");
+                response.getWriter().flush();
+                return;
             } catch (io.jsonwebtoken.MalformedJwtException e) {
                 logger.warn("Malformed JWT token for request to: " + requestURI);
             } catch (io.jsonwebtoken.security.SignatureException e) {
@@ -72,14 +77,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtil.validateToken(jwt, username)) {
+                // Validate specifically as access token
+                if (jwtUtil.validateAccessToken(jwt, username)) {
                     UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     logger.debug("Successfully authenticated user: " + username);
                 } else {
-                    logger.warn("Token validation failed for user: " + username);
+                    logger.warn("Access token validation failed for user: " + username);
                 }
             } catch (Exception e) {
                 logger.error("Error during authentication: " + e.getMessage());

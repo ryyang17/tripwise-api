@@ -4,6 +4,7 @@ import com.example.tripwise_api.dto.mapper.TripMapper;
 import com.example.tripwise_api.dto.mapper.TripParticipantMapper;
 import com.example.tripwise_api.dto.request.CreateParticipantRequest;
 import com.example.tripwise_api.dto.request.CreateTripRequest;
+import com.example.tripwise_api.dto.request.UpdateParticipantRequest;
 import com.example.tripwise_api.dto.request.UpdateTripRequest;
 import com.example.tripwise_api.dto.response.TripParticipantResponse;
 import com.example.tripwise_api.dto.response.TripResponse;
@@ -20,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/trips")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class TripController {
 
     private final TripService tripService;
@@ -84,7 +85,7 @@ public class TripController {
 
     @GetMapping("/{id}/participants")
     public ResponseEntity<List<TripParticipantResponse>> getParticipants(@PathVariable Integer id) {
-        List<TripParticipant> participants = tripParticipantService.getParticipantsByTripId(id);
+        List<TripParticipant> participants = tripParticipantService.getParticipantsByTripIdWithUserDetails(id);
         return ResponseEntity.ok(tripParticipantMapper.toResponseList(participants));
     }
 
@@ -96,6 +97,22 @@ public class TripController {
         TripParticipant savedParticipant = tripParticipantService.addParticipant(participant);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(tripParticipantMapper.toResponse(savedParticipant));
+    }
+
+    @PutMapping("/participants/{participantId}")
+    public ResponseEntity<TripParticipantResponse> updateParticipant(
+            @PathVariable Integer participantId,
+            @Valid @RequestBody UpdateParticipantRequest request) {
+        try {
+            TripParticipant updatedParticipant = tripParticipantService.updateParticipant(
+                    participantId,
+                    request.getRole(),
+                    request.getIsOwner()
+            );
+            return ResponseEntity.ok(tripParticipantMapper.toResponse(updatedParticipant));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/participants/{participantId}")

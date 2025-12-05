@@ -3,6 +3,7 @@ package com.example.tripwise_api.service;
 import com.example.tripwise_api.dal.ExpenseShareDAL;
 import com.example.tripwise_api.dto.mapper.ExpenseShareMapper;
 import com.example.tripwise_api.model.ExpenseShare;
+import com.example.tripwise_api.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,16 @@ public class ExpenseShareService {
     private final ExpenseShareDAL expenseShareDAL;
     private final ExpenseShareMapper expenseShareMapper;
     private final TripParticipantService participantService;
+    private final UserService userService;
 
     public ExpenseShareService(ExpenseShareDAL expenseShareDAL,
                              ExpenseShareMapper expenseShareMapper,
-                             TripParticipantService participantService) {
+                             TripParticipantService participantService,
+                             UserService userService) {
         this.expenseShareDAL = expenseShareDAL;
         this.expenseShareMapper = expenseShareMapper;
         this.participantService = participantService;
+        this.userService = userService;
     }
 
     /**
@@ -43,7 +47,12 @@ public class ExpenseShareService {
 
         return userIds.stream()
             .map(userId -> {
+                // Fetch the User entity to properly set the relationship
+                User user = userService.getUserById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
                 ExpenseShare share = new ExpenseShare(expenseId, userId, shareAmount);
+                share.setUser(user); // Set the User object to satisfy the @ManyToOne(nullable = false) constraint
                 return expenseShareDAL.saveShare(share);
             })
             .toList();
@@ -60,7 +69,12 @@ public class ExpenseShareService {
 
         return userAmounts.entrySet().stream()
             .map(entry -> {
+                // Fetch the User entity to properly set the relationship
+                User user = userService.getUserById(entry.getKey())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + entry.getKey()));
+
                 ExpenseShare share = new ExpenseShare(expenseId, entry.getKey(), entry.getValue());
+                share.setUser(user); // Set the User object to satisfy the @ManyToOne(nullable = false) constraint
                 return expenseShareDAL.saveShare(share);
             })
             .toList();
