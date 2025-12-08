@@ -34,13 +34,46 @@ public class GlobalErrorController implements org.springframework.boot.web.servl
 			status = ((Number) statusObj).intValue();
 		}
 
+		// Build user-friendly messages for common errors
+		String path = (String) attrs.getOrDefault("path", request.getRequestURI());
+		String originalMessage = String.valueOf(attrs.getOrDefault("message", ""));
+		String friendlyMessage = getFriendlyMessage(status, path, originalMessage);
+
 		Map<String, Object> body = new HashMap<>();
 		body.put("timestamp", attrs.get("timestamp"));
 		body.put("status", status);
-		body.put("error", attrs.getOrDefault("error", "N/A"));
-		body.put("message", attrs.getOrDefault("message", "No message available"));
-		body.put("path", attrs.getOrDefault("path", request.getRequestURI()));
+		body.put("error", attrs.getOrDefault("error", "Error"));
+		body.put("message", friendlyMessage);
+		body.put("path", path);
 
 		return ResponseEntity.status(status).body(body);
+	}
+
+	private String getFriendlyMessage(int status, String path, String originalMessage) {
+        return switch (status) {
+            case 401 -> {
+                if (originalMessage.toLowerCase().contains("bad credentials") ||
+                        originalMessage.toLowerCase().contains("invalid username or password")) {
+                    yield "Invalid username or password. Please check and try again.";
+                }
+                yield "Authentication required. Please log in with valid credentials.";
+            }
+            case 403 -> "Access denied. Please make sure you're logged in and have permission to access this resource.";
+            case 404 -> {
+                if (path != null && path.contains("/api/auth/")) {
+                    yield "Authentication endpoint not found. Please check the URL and use the correct HTTP method.";
+                }
+                yield String.format("The requested resource '%s' was not found. Please check the URL.", path);
+            }
+            case 400 -> {
+                if (originalMessage.toLowerCase().contains("validation")) {
+                    yield "Invalid input data. Please check your request and try again.";
+                }
+                yield "Bad request. Please check your input and try again.";
+            }
+            case 500 -> "An internal server error occurred. Please try again later or contact support.";
+            default -> originalMessage != null && !originalMessage.isEmpty() ?
+                    originalMessage : "An unexpected error occurred. Please try again.";
+        };
 	}
 }

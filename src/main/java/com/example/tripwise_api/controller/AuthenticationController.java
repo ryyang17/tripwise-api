@@ -10,12 +10,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,6 +26,15 @@ public class AuthenticationController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+
+    @Value("${cookie.secure}")
+    private boolean cookieSecure;
+
+    @Value("${cookie.same-site}")
+    private String cookieSameSite;
+
+    @Value("${cookie.domain}")
+    private String cookieDomain;
 
     public AuthenticationController(UserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
         this.userService = userService;
@@ -161,19 +170,63 @@ public class AuthenticationController {
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setSecure(cookieSecure); // Now configurable per environment
         cookie.setPath("/");
         cookie.setMaxAge(30 * 24 * 60 * 60); // 30 days in seconds
+
+        // Set domain if configured
+        if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+
         response.addCookie(cookie);
+
+        // Set SameSite attribute via response header (Spring Boot doesn't have direct setSameSite)
+        if (cookieSameSite != null && !cookieSameSite.trim().isEmpty()) {
+            String cookieHeader = String.format("refreshToken=%s; HttpOnly; Path=/; Max-Age=%d; SameSite=%s",
+                refreshToken, 30 * 24 * 60 * 60, cookieSameSite);
+
+            if (cookieSecure) {
+                cookieHeader += "; Secure";
+            }
+
+            if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
+                cookieHeader += "; Domain=" + cookieDomain;
+            }
+
+            response.setHeader("Set-Cookie", cookieHeader);
+        }
     }
 
     private void clearRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("refreshToken", "");
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setSecure(cookieSecure); // Now configurable per environment
         cookie.setPath("/");
         cookie.setMaxAge(0); // Expire immediately
+
+        // Set domain if configured
+        if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
+            cookie.setDomain(cookieDomain);
+        }
+
         response.addCookie(cookie);
+
+        // Clear with SameSite attribute via response header
+        if (cookieSameSite != null && !cookieSameSite.trim().isEmpty()) {
+            String cookieHeader = String.format("refreshToken=; HttpOnly; Path=/; Max-Age=0; SameSite=%s",
+                cookieSameSite);
+
+            if (cookieSecure) {
+                cookieHeader += "; Secure";
+            }
+
+            if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
+                cookieHeader += "; Domain=" + cookieDomain;
+            }
+
+            response.setHeader("Set-Cookie", cookieHeader);
+        }
     }
 
     private String getRefreshTokenFromCookie(HttpServletRequest request) {
