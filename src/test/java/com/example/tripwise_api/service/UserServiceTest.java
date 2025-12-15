@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -23,6 +24,9 @@ class UserServiceTest {
 
     @Mock
     private UserDAL userDAL;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -161,6 +165,7 @@ class UserServiceTest {
 
         when(userDAL.getUserById(1L)).thenReturn(Optional.of(existingUser));
         when(userDAL.saveUser(any(User.class))).thenReturn(existingUser);
+        when(passwordEncoder.encode("newpassword")).thenReturn("newpassword");
 
         // Act
         User result = userService.updateUser(1L, updateDetails);

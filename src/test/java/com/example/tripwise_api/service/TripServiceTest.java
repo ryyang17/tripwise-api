@@ -3,6 +3,7 @@ package com.example.tripwise_api.service;
 import com.example.tripwise_api.dal.TripDAL;
 import com.example.tripwise_api.service.exception.TripNotFoundException;
 import com.example.tripwise_api.model.Trip;
+import com.example.tripwise_api.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,12 @@ class TripServiceTest {
 
     @Mock
     private TripDAL tripDAL;
+
+    @Mock
+    private TripParticipantService tripParticipantService;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private TripService tripService;
@@ -76,6 +83,7 @@ class TripServiceTest {
     void createTrip_ServiceLayer_ShouldPassTripToDALAndReturnSaved() {
         // Arrange
         when(tripDAL.saveTrip(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userService.getUserById(1L)).thenReturn(Optional.of(new User()));
         Trip toCreate = new Trip();
         toCreate.setUserId(validTrip.getUserId());
         toCreate.setTripName(validTrip.getTripName());

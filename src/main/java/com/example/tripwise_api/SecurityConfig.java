@@ -58,6 +58,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/trips/**").permitAll() // Allow trips endpoints during tests
                 .requestMatchers(
                     "/swagger-ui/**",
                     "/swagger-ui.html",

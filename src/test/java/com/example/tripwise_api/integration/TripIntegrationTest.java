@@ -3,7 +3,9 @@ package com.example.tripwise_api.integration;
 import com.example.tripwise_api.dto.request.CreateTripRequest;
 import com.example.tripwise_api.dto.request.UpdateTripRequest;
 import com.example.tripwise_api.model.Trip;
+import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.repository.TripRepository;
+import com.example.tripwise_api.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -38,24 +42,35 @@ class TripIntegrationTest {
     private TripRepository tripRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+    private User testUser1;
+    private User testUser2;
 
     @BeforeEach
     void setUp() {
-        // Database wordt automatisch gereset door @Transactional en create-drop
+        // Create test users for trip creation
+        testUser1 = new User("testuser1", "test1@example.com", "password123");
+        testUser1 = userRepository.save(testUser1);
+
+        testUser2 = new User("testuser2", "test2@example.com", "password123");
+        testUser2 = userRepository.save(testUser2);
     }
 
     @AfterEach
     void tearDown() {
-        // Database cleanup wordt automatisch gedaan door @Transactional rollback
         tripRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
     void createTrip_EndToEnd_ShouldPersistInDatabase() throws Exception {
         // Arrange
         CreateTripRequest request = new CreateTripRequest();
-        request.setUserId(1L);
+        request.setUserId(testUser1.getId());
         request.setTripName("Integration Test Trip");
         request.setStartDate(LocalDate.of(2025, 6, 1));
         request.setEndDate(LocalDate.of(2025, 6, 5));
@@ -70,7 +85,7 @@ class TripIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.tripName").value("Integration Test Trip"))
                 .andExpect(jsonPath("$.destination").value("Amsterdam"))
-                .andExpect(jsonPath("$.userId").value(1));
+                .andExpect(jsonPath("$.userId").value(testUser1.getId().intValue()));
 
         // Assert - Database persistence
         List<Trip> tripsInDb = tripRepository.findAll();
@@ -79,15 +94,15 @@ class TripIntegrationTest {
         Trip savedTrip = tripsInDb.get(0);
         assertEquals("Integration Test Trip", savedTrip.getTripName());
         assertEquals("Amsterdam", savedTrip.getDestination());
-        assertEquals(1L, savedTrip.getUserId());
+        assertEquals(testUser1.getId(), savedTrip.getUserId());
         assertNotNull(savedTrip.getCreatedDate());
     }
 
     @Test
     void getAllTrips_WithExistingData_ShouldReturnFromDatabase() throws Exception {
         // Arrange - Insert test data directly into database
-        Trip trip1 = createTestTrip("Trip 1", "Amsterdam", 1L);
-        Trip trip2 = createTestTrip("Trip 2", "Rotterdam", 2L);
+        Trip trip1 = createTestTrip("Trip 1", "Amsterdam", testUser1.getId());
+        Trip trip2 = createTestTrip("Trip 2", "Rotterdam", testUser2.getId());
         tripRepository.saveAll(List.of(trip1, trip2));
 
         // Act & Assert
@@ -101,7 +116,7 @@ class TripIntegrationTest {
     @Test
     void getTripById_WithExistingTrip_ShouldReturnFromDatabase() throws Exception {
         // Arrange
-        Trip savedTrip = tripRepository.save(createTestTrip("Test Trip", "Utrecht", 1L));
+        Trip savedTrip = tripRepository.save(createTestTrip("Test Trip", "Utrecht", testUser1.getId()));
 
         // Act & Assert
         mockMvc.perform(get("/api/trips/{id}", savedTrip.getTripId()))
@@ -114,7 +129,7 @@ class TripIntegrationTest {
     @Test
     void updateTrip_EndToEnd_ShouldUpdateInDatabase() throws Exception {
         // Arrange
-        Trip existingTrip = tripRepository.save(createTestTrip("Old Name", "Old City", 1L));
+        Trip existingTrip = tripRepository.save(createTestTrip("Old Name", "Old City", testUser1.getId()));
 
         UpdateTripRequest updateRequest = new UpdateTripRequest();
         updateRequest.setTripName("Updated Name");
@@ -141,7 +156,7 @@ class TripIntegrationTest {
     @Test
     void deleteTrip_EndToEnd_ShouldRemoveFromDatabase() throws Exception {
         // Arrange
-        Trip tripToDelete = tripRepository.save(createTestTrip("To Delete", "Somewhere", 1L));
+        Trip tripToDelete = tripRepository.save(createTestTrip("To Delete", "Somewhere", testUser1.getId()));
         int tripId = tripToDelete.getTripId();
 
         // Verify trip exists
@@ -159,24 +174,24 @@ class TripIntegrationTest {
     @Test
     void getTripsByUserId_WithMultipleUsers_ShouldFilterCorrectly() throws Exception {
         // Arrange - Create trips for different users
-        Trip user1Trip1 = createTestTrip("User 1 Trip 1", "City A", 1L);
-        Trip user1Trip2 = createTestTrip("User 1 Trip 2", "City B", 1L);
-        Trip user2Trip = createTestTrip("User 2 Trip", "City C", 2L);
+        Trip user1Trip1 = createTestTrip("User 1 Trip 1", "City A", testUser1.getId());
+        Trip user1Trip2 = createTestTrip("User 1 Trip 2", "City B", testUser1.getId());
+        Trip user2Trip = createTestTrip("User 2 Trip", "City C", testUser2.getId());
 
         tripRepository.saveAll(List.of(user1Trip1, user1Trip2, user2Trip));
 
         // Act & Assert - Get trips for user 1
-        mockMvc.perform(get("/api/trips").param("userId", "1"))
+        mockMvc.perform(get("/api/trips").param("userId", testUser1.getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].userId", everyItem(is(1))))
+                .andExpect(jsonPath("$[*].userId", everyItem(is(testUser1.getId().intValue()))))
                 .andExpect(jsonPath("$[*].tripName", containsInAnyOrder("User 1 Trip 1", "User 1 Trip 2")));
 
         // Act & Assert - Get trips for user 2
-        mockMvc.perform(get("/api/trips").param("userId", "2"))
+        mockMvc.perform(get("/api/trips").param("userId", testUser2.getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].userId").value(2))
+                .andExpect(jsonPath("$[0].userId").value(testUser2.getId().intValue()))
                 .andExpect(jsonPath("$[0].tripName").value("User 2 Trip"));
     }
 
@@ -201,7 +216,7 @@ class TripIntegrationTest {
     void databaseTransactionRollback_OnError_ShouldNotPersistData() throws Exception {
         // Arrange
         CreateTripRequest request = new CreateTripRequest();
-        request.setUserId(1L);
+        request.setUserId(testUser1.getId());
         request.setTripName("Test Transaction");
         request.setStartDate(LocalDate.of(2025, 8, 10)); // Start after end - should cause validation error
         request.setEndDate(LocalDate.of(2025, 8, 5));

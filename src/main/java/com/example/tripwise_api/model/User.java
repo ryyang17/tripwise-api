@@ -24,7 +24,7 @@ public class User {
     @Column(nullable = false, length = 50, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String password;
 
     @Column(name = "created_date", nullable = false)
@@ -147,4 +147,5 @@ public class User {
     public void setCurrency(String currency) {
         this.currency = currency;
     }
+
 }

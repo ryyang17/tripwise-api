@@ -78,12 +78,12 @@ public class TripController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteTrip(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteTrip(@PathVariable Integer id) {
         try {
             tripService.deleteTrip(id);
-            return ResponseEntity.ok("Trip deleted successfully");
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
