@@ -32,6 +32,7 @@ class BookingServiceTest {
 
     private User testUser;
     private Booking testBooking;
+    private Long testTripId;
 
     @BeforeEach
     void setUp() {
@@ -49,6 +50,7 @@ class BookingServiceTest {
         testBooking.setSearchParams("{\"origin\":\"AMS\",\"destination\":\"BCN\"}");
         testBooking.setRawPayload("{\"data\":{\"flight\":\"details\"}}");
         testBooking.setCreatedDate(LocalDateTime.now());
+        testTripId = 1L;
     }
 
     @Test
@@ -57,7 +59,7 @@ class BookingServiceTest {
         when(bookingDAL.saveBooking(any(Booking.class))).thenReturn(testBooking);
 
         // Act
-        Booking result = bookingService.createBookingForUser(testUser, testBooking);
+        Booking result = bookingService.createBookingForUser(testUser, testBooking, testTripId);
 
         // Assert
         assertNotNull(result);
@@ -110,4 +112,3 @@ class BookingServiceTest {
         verify(bookingDAL, times(1)).getBookingById(999L);
     }
 }
-

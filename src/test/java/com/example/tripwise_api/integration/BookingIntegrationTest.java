@@ -1,8 +1,10 @@
 package com.example.tripwise_api.integration;
 
 import com.example.tripwise_api.model.User;
+import com.example.tripwise_api.model.Trip;
 import com.example.tripwise_api.repository.UserRepository;
 import com.example.tripwise_api.repository.BookingRepository;
+import com.example.tripwise_api.repository.TripRepository;
 import com.example.tripwise_api.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +42,9 @@ class BookingIntegrationTest {
     private BookingRepository bookingRepository;
 
     @Autowired
+    private TripRepository tripRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -49,14 +55,27 @@ class BookingIntegrationTest {
 
     private String accessToken;
     private User testUser;
+    private Trip testTrip;
 
     @BeforeEach
     void setUp() {
         bookingRepository.deleteAll();
         userRepository.deleteAll();
+        tripRepository.deleteAll();
 
         testUser = new User("bookinguser", "booking@test.com", passwordEncoder.encode("password123"));
         testUser = userRepository.save(testUser);
+
+        // Create a trip for the user
+        testTrip = new Trip();
+        testTrip.setUserId(testUser.getId());
+        testTrip.setTripName("Test Trip");
+        testTrip.setStartDate(LocalDate.now());
+        testTrip.setEndDate(LocalDate.now().plusDays(5));
+        testTrip.setDestination("Barcelona");
+        testTrip.setDescription("Test trip description");
+        testTrip.setTransportation("Plane");
+        testTrip = tripRepository.save(testTrip);
 
         accessToken = jwtUtil.generateAccessToken(testUser.getUsername());
     }
@@ -72,7 +91,7 @@ class BookingIntegrationTest {
         bookingRequest.put("searchParams", "{\"origin\":\"AMS\",\"destination\":\"BCN\"}");
         bookingRequest.put("rawPayload", "{\"data\":{\"flight\":\"details\"}}");
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/trips/" + testTrip.getTripId() + "/bookings")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))
@@ -92,10 +111,10 @@ class BookingIntegrationTest {
         bookingRequest.put("provider", "Amadeus");
         bookingRequest.put("rawPayload", "{\"data\":{\"hotel\":\"details\"}}");
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/trips/" + testTrip.getTripId() + "/bookings")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))
-                .andExpect(status().isForbidden()); // Spring Security returns 403 when no auth provided
+                .andExpect(status().isUnauthorized()); // Spring Security returns 401 when no auth provided
     }
 
     @Test
@@ -104,7 +123,7 @@ class BookingIntegrationTest {
         bookingRequest.put("bookingType", "FLIGHT");
         bookingRequest.put("provider", "Amadeus");
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/trips/" + testTrip.getTripId() + "/bookings")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))
@@ -119,14 +138,14 @@ class BookingIntegrationTest {
         bookingRequest.put("provider", "Amadeus");
         bookingRequest.put("rawPayload", "{\"data\":{\"flight\":\"details\"}}");
 
-        mockMvc.perform(post("/api/bookings")
+        mockMvc.perform(post("/api/trips/" + testTrip.getTripId() + "/bookings")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))
                 .andExpect(status().isCreated());
 
-        // Get bookings
-        mockMvc.perform(get("/api/bookings")
+        // Get bookings for the trip
+        mockMvc.perform(get("/api/trips/" + testTrip.getTripId() + "/bookings")
                 .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -137,8 +156,8 @@ class BookingIntegrationTest {
 
     @Test
     void testGetBookingsForCurrentUser_Unauthorized() throws Exception {
-        mockMvc.perform(get("/api/bookings"))
-                .andExpect(status().isForbidden()); // Spring Security returns 403 when no auth provided
+        mockMvc.perform(get("/api/trips/" + testTrip.getTripId() + "/bookings"))
+                .andExpect(status().isUnauthorized()); // Spring Security returns 401 when no auth provided
     }
 
     @Test
@@ -150,7 +169,7 @@ class BookingIntegrationTest {
         bookingRequest.put("bookingReference", "HOTEL456");
         bookingRequest.put("rawPayload", "{\"data\":{\"hotel\":\"details\"}}");
 
-        String response = mockMvc.perform(post("/api/bookings")
+        String response = mockMvc.perform(post("/api/trips/" + testTrip.getTripId() + "/bookings")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))

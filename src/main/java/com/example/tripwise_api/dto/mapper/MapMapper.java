@@ -35,7 +35,9 @@ public class MapMapper {
     }
 
     public static List<MapResponse> toResponseList(List<MapData> maps) {
-        return maps.stream().map(MapMapper::toResponse).collect(Collectors.toList());
+        return maps.stream()
+                .map(MapMapper::toResponse)
+                .collect(Collectors.<MapResponse>toList());
     }
 }
 
