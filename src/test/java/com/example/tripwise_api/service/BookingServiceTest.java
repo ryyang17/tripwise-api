@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,7 +73,7 @@ class BookingServiceTest {
     @Test
     void testGetBookingsForUser() {
         // Arrange
-        List<Booking> bookings = Arrays.asList(testBooking);
+        List<Booking> bookings = Collections.singletonList(testBooking);
         when(bookingDAL.getBookingsByUserId(1L)).thenReturn(bookings);
 
         // Act
