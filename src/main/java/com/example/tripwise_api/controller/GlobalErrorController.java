@@ -1,5 +1,6 @@
 package com.example.tripwise_api.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,9 @@ public class GlobalErrorController implements org.springframework.boot.web.servl
 
 	private final ErrorAttributes errorAttributes;
 
+	@Value("${spring.profiles.active:default}")
+	private String activeProfile;
+
 	public GlobalErrorController(ErrorAttributes errorAttributes) {
 		this.errorAttributes = errorAttributes;
 	}
@@ -23,7 +27,13 @@ public class GlobalErrorController implements org.springframework.boot.web.servl
 	@RequestMapping("/error")
 	public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
 		ServletWebRequest webRequest = new ServletWebRequest(request);
-		ErrorAttributeOptions options = ErrorAttributeOptions.defaults().including(ErrorAttributeOptions.Include.MESSAGE);
+
+		// Only include message in non-production environments, exclude stack trace for security
+		ErrorAttributeOptions.Include[] includes = isProductionEnvironment()
+			? new ErrorAttributeOptions.Include[]{}
+			: new ErrorAttributeOptions.Include[]{ErrorAttributeOptions.Include.MESSAGE};
+
+		ErrorAttributeOptions options = ErrorAttributeOptions.defaults().including(includes);
 		Map<String, Object> attrs = errorAttributes.getErrorAttributes(webRequest, options);
 
 		int status = 500;
@@ -44,9 +54,28 @@ public class GlobalErrorController implements org.springframework.boot.web.servl
 		body.put("status", status);
 		body.put("error", attrs.getOrDefault("error", "Error"));
 		body.put("message", friendlyMessage);
-		body.put("path", path);
+		body.put("path", sanitizePath(path));
 
 		return ResponseEntity.status(status).body(body);
+	}
+
+	private boolean isProductionEnvironment() {
+		return "prod".equals(activeProfile) || "production".equals(activeProfile);
+	}
+
+	/**
+	 * Sanitize path to prevent information disclosure
+	 */
+	private String sanitizePath(String path) {
+		if (path == null) {
+			return "/";
+		}
+		// Remove query parameters and fragments that might contain sensitive data
+		int queryIndex = path.indexOf('?');
+		if (queryIndex > 0) {
+			path = path.substring(0, queryIndex);
+		}
+		return path;
 	}
 
 	private String getFriendlyMessage(int status, String path, String originalMessage) {
