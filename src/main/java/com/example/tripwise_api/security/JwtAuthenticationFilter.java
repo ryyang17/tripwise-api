@@ -57,20 +57,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.debug("Extracted username from JWT: " + username);
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 logger.warn("JWT token is expired for request to: " + requestURI);
-                // Return 401 for expired access token to trigger refresh
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"error\":\"Access token expired\",\"message\":\"Please refresh your token\"}");
                 response.getWriter().flush();
                 return;
-            } catch (io.jsonwebtoken.MalformedJwtException e) {
-                logger.warn("Malformed JWT token for request to: " + requestURI);
-            } catch (io.jsonwebtoken.security.SignatureException e) {
-                logger.warn("Invalid JWT signature for request to: " + requestURI);
+            } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.security.SignatureException e) {
+                logger.warn("Invalid JWT token for request to: " + requestURI);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"Invalid token\"}");
+                response.getWriter().flush();
+                return;
             } catch (Exception e) {
                 logger.error("JWT token extraction failed: " + e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"Token extraction failed\"}");
+                response.getWriter().flush();
+                return;
             }
         } else {
             logger.debug("No Bearer token found in Authorization header for: " + requestURI);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Missing token\"}");
+            response.getWriter().flush();
+            return;
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -86,9 +95,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     logger.debug("Successfully authenticated user: " + username);
                 } else {
                     logger.warn("Access token validation failed for user: " + username);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"error\":\"Invalid access token\"}");
+                    response.getWriter().flush();
+                    return;
                 }
             } catch (Exception e) {
                 logger.error("Error during authentication: " + e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"Authentication error\"}");
+                response.getWriter().flush();
+                return;
             }
         }
 

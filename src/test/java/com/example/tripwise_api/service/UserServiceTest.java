@@ -310,4 +310,202 @@ class UserServiceTest {
         verify(userDAL, times(1)).getUserById(1L);
         verify(userDAL, times(1)).saveUser(existingUser);
     }
+
+    @Test
+    void findByUsername_WhenUserExists_ShouldReturnUser() {
+        // Arrange
+        when(userDAL.findByUsername("testuser")).thenReturn(Optional.of(validUser));
+
+        // Act
+        Optional<User> result = userService.findByUsername("testuser");
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(validUser, result.get());
+        verify(userDAL, times(1)).findByUsername("testuser");
+    }
+
+    @Test
+    void findByUsername_WhenUserDoesNotExist_ShouldReturnEmpty() {
+        // Arrange
+        when(userDAL.findByUsername("nonexistent")).thenReturn(Optional.empty());
+
+        // Act
+        Optional<User> result = userService.findByUsername("nonexistent");
+
+        // Assert
+        assertFalse(result.isPresent());
+        verify(userDAL, times(1)).findByUsername("nonexistent");
+    }
+
+    @Test
+    void findByEmail_WhenUserExists_ShouldReturnUser() {
+        // Arrange
+        when(userDAL.findByEmail("test@example.com")).thenReturn(Optional.of(validUser));
+
+        // Act
+        Optional<User> result = userService.findByEmail("test@example.com");
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(validUser, result.get());
+        verify(userDAL, times(1)).findByEmail("test@example.com");
+    }
+
+    @Test
+    void findByEmail_WhenUserDoesNotExist_ShouldReturnEmpty() {
+        // Arrange
+        when(userDAL.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // Act
+        Optional<User> result = userService.findByEmail("nonexistent@example.com");
+
+        // Assert
+        assertFalse(result.isPresent());
+        verify(userDAL, times(1)).findByEmail("nonexistent@example.com");
+    }
+
+    @Test
+    void registerUser_WithValidData_ShouldCreateUser() {
+        // Arrange
+        String username = "newuser";
+        String email = "newuser@example.com";
+        String password = "password123";
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.empty());
+        when(userDAL.findByEmail(email)).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(password)).thenReturn("encodedPassword");
+        when(userDAL.saveUser(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User result = userService.registerUser(username, email, password);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(username, result.getUsername());
+        assertEquals(email, result.getEmail());
+        assertEquals("encodedPassword", result.getPassword());
+        assertNotNull(result.getCreatedDate());
+        verify(userDAL, times(1)).findByUsername(username);
+        verify(userDAL, times(1)).findByEmail(email);
+        verify(passwordEncoder, times(1)).encode(password);
+        verify(userDAL, times(1)).saveUser(any(User.class));
+    }
+
+    @Test
+    void registerUser_WithExistingUsername_ShouldThrowException() {
+        // Arrange
+        String username = "existinguser";
+        String email = "new@example.com";
+        String password = "password123";
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.of(validUser));
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> userService.registerUser(username, email, password)
+        );
+
+        assertEquals("Username already exists", exception.getMessage());
+        verify(userDAL, times(1)).findByUsername(username);
+        verify(userDAL, never()).findByEmail(anyString());
+        verify(userDAL, never()).saveUser(any(User.class));
+    }
+
+    @Test
+    void registerUser_WithExistingEmail_ShouldThrowException() {
+        // Arrange
+        String username = "newuser";
+        String email = "existing@example.com";
+        String password = "password123";
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.empty());
+        when(userDAL.findByEmail(email)).thenReturn(Optional.of(validUser));
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> userService.registerUser(username, email, password)
+        );
+
+        assertEquals("Email already exists", exception.getMessage());
+        verify(userDAL, times(1)).findByUsername(username);
+        verify(userDAL, times(1)).findByEmail(email);
+        verify(userDAL, never()).saveUser(any(User.class));
+    }
+
+    @Test
+    void authenticateUser_WithCorrectCredentials_ShouldReturnTrue() {
+        // Arrange
+        String username = "testuser";
+        String password = "password123";
+        validUser.setPassword("encodedPassword");
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.of(validUser));
+        when(passwordEncoder.matches(password, "encodedPassword")).thenReturn(true);
+
+        // Act
+        boolean result = userService.authenticateUser(username, password);
+
+        // Assert
+        assertTrue(result);
+        verify(userDAL, times(1)).findByUsername(username);
+        verify(passwordEncoder, times(1)).matches(password, "encodedPassword");
+    }
+
+    @Test
+    void authenticateUser_WithIncorrectPassword_ShouldReturnFalse() {
+        // Arrange
+        String username = "testuser";
+        String password = "wrongpassword";
+        validUser.setPassword("encodedPassword");
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.of(validUser));
+        when(passwordEncoder.matches(password, "encodedPassword")).thenReturn(false);
+
+        // Act
+        boolean result = userService.authenticateUser(username, password);
+
+        // Assert
+        assertFalse(result);
+        verify(userDAL, times(1)).findByUsername(username);
+        verify(passwordEncoder, times(1)).matches(password, "encodedPassword");
+    }
+
+    @Test
+    void authenticateUser_WithNonExistentUser_ShouldReturnFalse() {
+        // Arrange
+        String username = "nonexistent";
+        String password = "password123";
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.empty());
+
+        // Act
+        boolean result = userService.authenticateUser(username, password);
+
+        // Assert
+        assertFalse(result);
+        verify(userDAL, times(1)).findByUsername(username);
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
+    void createUser_ShouldEncodePassword() {
+        // Arrange
+        User newUser = new User();
+        newUser.setUsername("newuser");
+        newUser.setPassword("plainPassword");
+
+        when(passwordEncoder.encode("plainPassword")).thenReturn("encodedPassword");
+        when(userDAL.saveUser(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User result = userService.createUser(newUser);
+
+        // Assert
+        assertEquals("encodedPassword", result.getPassword());
+        verify(passwordEncoder, times(1)).encode("plainPassword");
+        verify(userDAL, times(1)).saveUser(newUser);
+    }
 }

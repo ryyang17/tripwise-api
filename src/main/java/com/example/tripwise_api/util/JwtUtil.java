@@ -79,8 +79,16 @@ public class JwtUtil {
     }
 
     public Boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        try {
+            final String extractedUsername = extractUsername(token);
+            return (extractedUsername.equals(username) && !isTokenExpired(token));
+        } catch (ExpiredJwtException e) {
+            // Token is expired, return false without propagating exception
+            return false;
+        } catch (Exception e) {
+            // Any other parsing error, also return false
+            return false;
+        }
     }
 
     public Boolean validateAccessToken(String token, String username) {

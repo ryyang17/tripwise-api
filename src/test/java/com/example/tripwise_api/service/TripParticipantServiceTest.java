@@ -2,6 +2,7 @@ package com.example.tripwise_api.service;
 
 import com.example.tripwise_api.dal.TripParticipantDAL;
 import com.example.tripwise_api.model.TripParticipant;
+import com.example.tripwise_api.repository.TripParticipantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +24,9 @@ class TripParticipantServiceTest {
 
     @Mock
     private TripParticipantDAL dal;
+
+    @Mock
+    private TripParticipantRepository repository;
 
     @InjectMocks
     private TripParticipantService tripParticipantService;
@@ -190,5 +195,106 @@ class TripParticipantServiceTest {
 
         // Assert
         verify(dal, times(1)).deleteParticipant(999);
+    }
+
+    @Test
+    void getParticipantsByTripIdWithUserDetails_ShouldReturnParticipantsWithUser() {
+        TripParticipant participant = new TripParticipant();
+        participant.setId(1);
+        participant.setTripId(1);
+        participant.setUserId(100L);
+        participant.setRole("MEMBER");
+        List<TripParticipant> expected = List.of(participant);
+        when(repository.findByTripIdWithUser(1)).thenReturn(expected);
+        List<TripParticipant> result = tripParticipantService.getParticipantsByTripIdWithUserDetails(1);
+        assertEquals(expected, result);
+        verify(repository).findByTripIdWithUser(1);
+    }
+
+    @Test
+    void validateUsersAreParticipants_AllExist_ShouldPass() {
+        when(repository.existsByTripIdAndUserId(1, 100L)).thenReturn(true);
+        when(repository.existsByTripIdAndUserId(1, 101L)).thenReturn(true);
+        assertDoesNotThrow(() -> tripParticipantService.validateUsersAreParticipants(1, Arrays.asList(100L, 101L)));
+        verify(repository).existsByTripIdAndUserId(1, 100L);
+        verify(repository).existsByTripIdAndUserId(1, 101L);
+    }
+
+    @Test
+    void validateUsersAreParticipants_UserMissing_ShouldThrow() {
+        when(repository.existsByTripIdAndUserId(1, 100L)).thenReturn(true);
+        when(repository.existsByTripIdAndUserId(1, 101L)).thenReturn(false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> tripParticipantService.validateUsersAreParticipants(1, Arrays.asList(100L, 101L)));
+        assertTrue(ex.getMessage().contains("101"));
+        verify(repository).existsByTripIdAndUserId(1, 100L);
+        verify(repository).existsByTripIdAndUserId(1, 101L);
+    }
+
+    @Test
+    void updateParticipant_OwnerRole_ShouldSetOwner() {
+        TripParticipant participant = new TripParticipant();
+        participant.setId(1);
+        participant.setTripId(1);
+        participant.setUserId(100L);
+        participant.setRole("MEMBER");
+        when(dal.getParticipantById(1)).thenReturn(Optional.of(participant));
+        when(dal.saveParticipant(any())).thenReturn(participant);
+        when(repository.findByTripIdWithUser(1)).thenReturn(List.of(participant));
+        TripParticipant result = tripParticipantService.updateParticipant(1, "MEMBER", true);
+        assertEquals("owner", result.getRole());
+        verify(dal).getParticipantById(1);
+        verify(dal).saveParticipant(participant);
+        verify(repository).findByTripIdWithUser(1);
+    }
+
+    @Test
+    void updateParticipant_CustomRole_ShouldSetRole() {
+        TripParticipant participant = new TripParticipant();
+        participant.setId(2);
+        participant.setTripId(1);
+        participant.setUserId(101L);
+        participant.setRole("MEMBER");
+        when(dal.getParticipantById(2)).thenReturn(Optional.of(participant));
+        when(dal.saveParticipant(any())).thenReturn(participant);
+        when(repository.findByTripIdWithUser(1)).thenReturn(List.of(participant));
+        TripParticipant result = tripParticipantService.updateParticipant(2, "ORGANIZER", false);
+        assertEquals("ORGANIZER", result.getRole());
+        verify(dal).getParticipantById(2);
+        verify(dal).saveParticipant(participant);
+        verify(repository).findByTripIdWithUser(1);
+    }
+
+    @Test
+    void updateParticipant_NotFound_ShouldThrow() {
+        when(dal.getParticipantById(999)).thenReturn(Optional.empty());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> tripParticipantService.updateParticipant(999, "MEMBER", false));
+        assertTrue(ex.getMessage().contains("999"));
+        verify(dal).getParticipantById(999);
+    }
+
+    @Test
+    void updateParticipant_ReturnsSavedIfNotFoundInRepo() {
+        TripParticipant participant = new TripParticipant();
+        participant.setId(3);
+        participant.setTripId(2);
+        participant.setUserId(102L);
+        participant.setRole("MEMBER");
+        when(dal.getParticipantById(3)).thenReturn(Optional.of(participant));
+        when(dal.saveParticipant(any())).thenReturn(participant);
+        when(repository.findByTripIdWithUser(2)).thenReturn(List.of());
+        TripParticipant result = tripParticipantService.updateParticipant(3, "ORGANIZER", false);
+        assertEquals(participant, result);
+        verify(dal).getParticipantById(3);
+        verify(dal).saveParticipant(participant);
+        verify(repository).findByTripIdWithUser(2);
+    }
+
+    @Test
+    void deleteParticipantsByTripId_ShouldCallDAL() {
+        doNothing().when(dal).deleteParticipantsByTripId(1);
+        tripParticipantService.deleteParticipantsByTripId(1);
+        verify(dal).deleteParticipantsByTripId(1);
     }
 }

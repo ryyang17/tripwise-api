@@ -67,7 +67,7 @@ public class AuthIntegrationTest {
     @Test
     public void accessProtectedWithoutToken_shouldReturnForbidden() throws Exception {
         mockMvc.perform(get("/api/users/me"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

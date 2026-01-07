@@ -106,7 +106,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 // Public authentication endpoints
-                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/validate").permitAll()
                 // Swagger/OpenAPI documentation endpoints
                 .requestMatchers(
                     "/swagger-ui/**",

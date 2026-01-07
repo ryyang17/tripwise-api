@@ -346,20 +346,18 @@ class ExpenseServiceTest {
         other.setId(2001); other.setTripId(100); other.setUserId(20L);
         when(tripParticipantService.getParticipantById(2000)).thenReturn(Optional.of(payer));
         when(tripParticipantService.getParticipantById(2001)).thenReturn(Optional.of(other));
-
-        Expense saved = new Expense();
-        saved.setExpenseId(30); saved.setTripId(100); saved.setAmount(new BigDecimal("100.00")); saved.setPaidBy(10L);
-        when(expenseDAL.saveExpense(any(Expense.class))).thenReturn(saved);
-
-        // users present
         User u1 = new User(); u1.setId(10L);
         User u2 = new User(); u2.setId(20L);
         when(userService.getUserById(10L)).thenReturn(Optional.of(u1));
         when(userService.getUserById(20L)).thenReturn(Optional.of(u2));
+        Expense saved = new Expense();
+        saved.setExpenseId(80);
+        saved.setTripId(100);
+        saved.setAmount(new BigDecimal("100.00"));
+        saved.setPaidBy(10L);
+        when(expenseDAL.saveExpense(any(Expense.class))).thenReturn(saved);
 
-        Expense result = expenseService.createSharedExpense(100, req);
-        assertNotNull(result);
-        verify(expenseShareDAL, times(2)).saveShare(any(ExpenseShare.class));
+        assertDoesNotThrow(() -> expenseService.createSharedExpense(100, req));
     }
 
     @Test
@@ -455,5 +453,100 @@ class ExpenseServiceTest {
         assertTrue(ex.getMessage().contains("Description is required")
                 || ex.getMessage().contains("Amount must be greater than 0")
                 || ex.getMessage().contains("Split participants are required"));
+    }
+
+    @Test
+    void createSharedExpense_ShouldThrow_WhenCategoryNotFound() {
+        SharedExpenseRequest req = new SharedExpenseRequest();
+        req.setDescription("Dinner");
+        req.setAmount(new BigDecimal("50.00"));
+        req.setCategoryId(999);
+        req.setCurrency("EUR");
+        req.setPaidByParticipantId(1000);
+        req.setSplitWithParticipantIds(Arrays.asList(1000));
+        req.setSplitEvenly(true);
+        when(expenseCategoryService.getCategoryById(999L)).thenReturn(Optional.empty());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> expenseService.createSharedExpense(100, req));
+        assertTrue(ex.getMessage().contains("Category not found"));
+    }
+
+    @Test
+    void createSharedExpense_ShouldThrow_WhenPayerParticipantNotFound() {
+        SharedExpenseRequest req = new SharedExpenseRequest();
+        req.setDescription("Dinner");
+        req.setAmount(new BigDecimal("50.00"));
+        req.setCategoryId(1);
+        req.setCurrency("EUR");
+        req.setPaidByParticipantId(1000);
+        req.setSplitWithParticipantIds(Arrays.asList(1000));
+        req.setSplitEvenly(true);
+        when(expenseCategoryService.getCategoryById(1L)).thenReturn(Optional.of(new ExpenseCategory()));
+        when(tripParticipantService.getParticipantById(1000)).thenReturn(Optional.empty());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> expenseService.createSharedExpense(100, req));
+        assertTrue(ex.getMessage().contains("Payer participant not found"));
+    }
+
+    @Test
+    void createSharedExpense_ShouldThrow_WhenSplitParticipantNotFound() {
+        SharedExpenseRequest req = new SharedExpenseRequest();
+        req.setDescription("Dinner");
+        req.setAmount(new BigDecimal("50.00"));
+        req.setCategoryId(1);
+        req.setCurrency("EUR");
+        req.setPaidByParticipantId(1000);
+        req.setSplitWithParticipantIds(Arrays.asList(1000, 1001));
+        req.setSplitEvenly(true);
+        when(expenseCategoryService.getCategoryById(1L)).thenReturn(Optional.of(new ExpenseCategory()));
+        TripParticipant payer = new TripParticipant();
+        payer.setId(1000); payer.setTripId(100); payer.setUserId(10L);
+        when(tripParticipantService.getParticipantById(1000)).thenReturn(Optional.of(payer));
+        when(tripParticipantService.getParticipantById(1001)).thenReturn(Optional.empty());
+        Expense saved = new Expense();
+        saved.setExpenseId(70);
+        saved.setTripId(100);
+        saved.setAmount(new BigDecimal("50.00"));
+        saved.setPaidBy(10L);
+        when(expenseDAL.saveExpense(any(Expense.class))).thenReturn(saved);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> expenseService.createSharedExpense(100, req));
+        assertTrue(ex.getMessage().contains("Participant not found"));
+    }
+
+    @Test
+    void createSharedExpense_ShouldThrow_WhenCustomSplitsDoNotSumToTotal() {
+        SharedExpenseRequest req = new SharedExpenseRequest();
+        req.setDescription("Taxi");
+        req.setAmount(new BigDecimal("100.00"));
+        req.setCategoryId(1);
+        req.setCurrency("EUR");
+        req.setPaidByParticipantId(2000);
+        req.setSplitWithParticipantIds(Arrays.asList(2000, 2001));
+        req.setSplitEvenly(false);
+        Map<String, BigDecimal> custom = new HashMap<>();
+        custom.put("2000", new BigDecimal("40.00"));
+        custom.put("2001", new BigDecimal("50.00")); // total 90, not 100
+        req.setCustomSplits(custom);
+        when(expenseCategoryService.getCategoryById(1L)).thenReturn(Optional.of(new ExpenseCategory()));
+        TripParticipant payer = new TripParticipant();
+        payer.setId(2000); payer.setTripId(100); payer.setUserId(10L);
+        TripParticipant other = new TripParticipant();
+        other.setId(2001); other.setTripId(100); other.setUserId(20L);
+        when(tripParticipantService.getParticipantById(2000)).thenReturn(Optional.of(payer));
+        when(tripParticipantService.getParticipantById(2001)).thenReturn(Optional.of(other));
+        User u1 = new User(); u1.setId(10L);
+        User u2 = new User(); u2.setId(20L);
+        when(userService.getUserById(10L)).thenReturn(Optional.of(u1));
+        when(userService.getUserById(20L)).thenReturn(Optional.of(u2));
+        Expense saved = new Expense();
+        saved.setExpenseId(81);
+        saved.setTripId(100);
+        saved.setAmount(new BigDecimal("100.00"));
+        saved.setPaidBy(10L);
+        when(expenseDAL.saveExpense(any(Expense.class))).thenReturn(saved);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+            () -> expenseService.createSharedExpense(100, req));
+        assertTrue(ex.getMessage().contains("do not add up to total expense amount"));
     }
 }

@@ -90,7 +90,7 @@ public class AuthenticationController {
 
         } catch (IllegalArgumentException e) {
             AuthResponse authResponse = new AuthResponse(null, null, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(authResponse);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(authResponse);
         } catch (Exception e) {
             AuthResponse authResponse = new AuthResponse(null, null, "Registration failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(authResponse);
@@ -159,7 +159,7 @@ public class AuthenticationController {
                 }
             } else {
                 AuthResponse authResponse = new AuthResponse(null, null, "Authorization header is missing or invalid");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(authResponse);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(authResponse);
             }
         } catch (Exception e) {
             AuthResponse authResponse = new AuthResponse(null, null, "Token validation failed: " + e.getMessage());
