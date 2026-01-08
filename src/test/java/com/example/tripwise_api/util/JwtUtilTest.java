@@ -1,8 +1,6 @@
 package com.example.tripwise_api.util;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -149,6 +147,160 @@ class JwtUtilTest {
 
         // Act
         String type = jwtUtil.extractClaim(token, claims -> claims.get("type", String.class));
+
+        // Assert
+        assertEquals("refresh", type);
+    }
+
+    @Test
+    void validateToken_WithMalformedToken_ShouldReturnFalse() {
+        // Act
+        boolean isValid = jwtUtil.validateToken("malformed.token", TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateToken_WithInvalidSignature_ShouldReturnFalse() {
+        // Arrange
+        String token = jwtUtil.generateAccessToken(TEST_USERNAME);
+        // Change the secret to invalidate the signature
+        ReflectionTestUtils.setField(jwtUtil, "secret", "differentSecretKeyThatIsAlsoLongEnoughForHS512AlgorithmToWorkProperlyAndSecurelyWithAtLeast512BitsOfEntropy");
+
+        // Act
+        boolean isValid = jwtUtil.validateToken(token, TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateAccessToken_WithRefreshToken_ShouldReturnFalse() {
+        // Arrange
+        String refreshToken = jwtUtil.generateRefreshToken(TEST_USERNAME);
+
+        // Act
+        boolean isValid = jwtUtil.validateAccessToken(refreshToken, TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateAccessToken_WithMalformedToken_ShouldReturnFalse() {
+        // Act
+        boolean isValid = jwtUtil.validateAccessToken("invalid.token.here", TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateAccessToken_WithWrongUsername_ShouldReturnFalse() {
+        // Arrange
+        String token = jwtUtil.generateAccessToken(TEST_USERNAME);
+
+        // Act
+        boolean isValid = jwtUtil.validateAccessToken(token, "wronguser");
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateAccessToken_WithExpiredToken_ShouldReturnFalse() {
+        // Arrange
+        ReflectionTestUtils.setField(jwtUtil, "accessTokenExpiration", -1000L);
+        String token = jwtUtil.generateAccessToken(TEST_USERNAME);
+        ReflectionTestUtils.setField(jwtUtil, "accessTokenExpiration", 900000L);
+
+        // Act
+        boolean isValid = jwtUtil.validateAccessToken(token, TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateRefreshToken_WithAccessToken_ShouldReturnFalse() {
+        // Arrange
+        String accessToken = jwtUtil.generateAccessToken(TEST_USERNAME);
+
+        // Act
+        boolean isValid = jwtUtil.validateRefreshToken(accessToken, TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateRefreshToken_WithMalformedToken_ShouldReturnFalse() {
+        // Act
+        boolean isValid = jwtUtil.validateRefreshToken("invalid.token.here", TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateRefreshToken_WithWrongUsername_ShouldReturnFalse() {
+        // Arrange
+        String token = jwtUtil.generateRefreshToken(TEST_USERNAME);
+
+        // Act
+        boolean isValid = jwtUtil.validateRefreshToken(token, "wronguser");
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void validateRefreshToken_WithExpiredToken_ShouldReturnFalse() {
+        // Arrange
+        ReflectionTestUtils.setField(jwtUtil, "refreshTokenExpiration", -1000L);
+        String token = jwtUtil.generateRefreshToken(TEST_USERNAME);
+        ReflectionTestUtils.setField(jwtUtil, "refreshTokenExpiration", 2592000000L);
+
+        // Act
+        boolean isValid = jwtUtil.validateRefreshToken(token, TEST_USERNAME);
+
+        // Assert
+        assertFalse(isValid);
+    }
+
+    @Test
+    void extractExpiration_WithValidToken_ShouldReturnDate() {
+        // Arrange
+        String token = jwtUtil.generateAccessToken(TEST_USERNAME);
+
+        // Act
+        java.util.Date expiration = jwtUtil.extractExpiration(token);
+
+        // Assert
+        assertNotNull(expiration);
+        assertTrue(expiration.after(new java.util.Date()));
+    }
+
+    @Test
+    void extractTokenType_WithAccessToken_ShouldReturnAccess() {
+        // Arrange
+        String token = jwtUtil.generateAccessToken(TEST_USERNAME);
+
+        // Act
+        String type = jwtUtil.extractTokenType(token);
+
+        // Assert
+        assertEquals("access", type);
+    }
+
+    @Test
+    void extractTokenType_WithRefreshToken_ShouldReturnRefresh() {
+        // Arrange
+        String token = jwtUtil.generateRefreshToken(TEST_USERNAME);
+
+        // Act
+        String type = jwtUtil.extractTokenType(token);
 
         // Assert
         assertEquals("refresh", type);

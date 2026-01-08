@@ -6,6 +6,7 @@ import com.example.tripwise_api.model.Trip;
 import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.repository.TripRepository;
 import com.example.tripwise_api.repository.UserRepository;
+import com.example.tripwise_api.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,8 +46,14 @@ class TripIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     private User testUser1;
     private User testUser2;
+
+    private String testUser1Token;
+    private String testUser2Token;
 
     @BeforeEach
     void setUp() {
@@ -56,6 +63,10 @@ class TripIntegrationTest {
 
         testUser2 = new User("testuser2", "test2@example.com", "password123");
         testUser2 = userRepository.save(testUser2);
+
+        // Generate JWT tokens for test users
+        testUser1Token = jwtUtil.generateAccessToken(testUser1.getUsername());
+        testUser2Token = jwtUtil.generateAccessToken(testUser2.getUsername());
     }
 
     @AfterEach
@@ -74,10 +85,11 @@ class TripIntegrationTest {
         request.setEndDate(LocalDate.of(2025, 6, 5));
         request.setDestination("Amsterdam");
         request.setDescription("Full integration test");
-        request.setTransportation("Train");
+        request.setTransportation("train");
 
         // Act & Assert - API call
         mockMvc.perform(post("/api/trips")
+                .header("Authorization", "Bearer " + testUser1Token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -104,7 +116,8 @@ class TripIntegrationTest {
         tripRepository.saveAll(List.of(trip1, trip2));
 
         // Act & Assert
-        mockMvc.perform(get("/api/trips"))
+        mockMvc.perform(get("/api/trips")
+                .header("Authorization", "Bearer " + testUser1Token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].tripName", is("Trip 1")))
@@ -117,7 +130,8 @@ class TripIntegrationTest {
         Trip savedTrip = tripRepository.save(createTestTrip("Test Trip", "Utrecht", testUser1.getId()));
 
         // Act & Assert
-        mockMvc.perform(get("/api/trips/{id}", savedTrip.getTripId()))
+        mockMvc.perform(get("/api/trips/{id}", savedTrip.getTripId())
+                .header("Authorization", "Bearer " + testUser1Token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tripId").value(savedTrip.getTripId()))
                 .andExpect(jsonPath("$.tripName").value("Test Trip"))
@@ -134,10 +148,13 @@ class TripIntegrationTest {
         updateRequest.setDestination("New City");
         updateRequest.setStartDate(LocalDate.of(2025, 7, 1));
         updateRequest.setEndDate(LocalDate.of(2025, 7, 5));
-        updateRequest.setTransportation("Car");
+        updateRequest.setTransportation("car");
+        updateRequest.setTripId(existingTrip.getTripId());
+        updateRequest.setUserId(existingTrip.getUserId());
 
         // Act & Assert - API call
         mockMvc.perform(put("/api/trips/{id}", existingTrip.getTripId())
+                .header("Authorization", "Bearer " + testUser1Token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -148,7 +165,7 @@ class TripIntegrationTest {
         Trip updatedTrip = tripRepository.findById(existingTrip.getTripId()).orElseThrow();
         assertEquals("Updated Name", updatedTrip.getTripName());
         assertEquals("New City", updatedTrip.getDestination());
-        assertEquals("Car", updatedTrip.getTransportation());
+        assertEquals("car", updatedTrip.getTransportation());
     }
 
     @Test
@@ -161,7 +178,8 @@ class TripIntegrationTest {
         assertTrue(tripRepository.existsById(tripId));
 
         // Act
-        mockMvc.perform(delete("/api/trips/{id}", tripId))
+        mockMvc.perform(delete("/api/trips/{id}", tripId)
+                .header("Authorization", "Bearer " + testUser1Token))
                 .andExpect(status().isNoContent());
 
         // Assert - Trip removed from database
@@ -179,14 +197,16 @@ class TripIntegrationTest {
         tripRepository.saveAll(List.of(user1Trip1, user1Trip2, user2Trip));
 
         // Act & Assert - Get trips for user 1
-        mockMvc.perform(get("/api/trips").param("userId", testUser1.getId().toString()))
+        mockMvc.perform(get("/api/trips").param("userId", testUser1.getId().toString())
+                .header("Authorization", "Bearer " + testUser1Token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[*].userId", everyItem(is(testUser1.getId().intValue()))))
                 .andExpect(jsonPath("$[*].tripName", containsInAnyOrder("User 1 Trip 1", "User 1 Trip 2")));
 
         // Act & Assert - Get trips for user 2
-        mockMvc.perform(get("/api/trips").param("userId", testUser2.getId().toString()))
+        mockMvc.perform(get("/api/trips").param("userId", testUser2.getId().toString())
+                .header("Authorization", "Bearer " + testUser2Token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].userId").value(testUser2.getId().intValue()))
@@ -202,6 +222,7 @@ class TripIntegrationTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/trips")
+                .header("Authorization", "Bearer " + testUser1Token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -221,6 +242,7 @@ class TripIntegrationTest {
 
         // Act
         mockMvc.perform(post("/api/trips")
+                .header("Authorization", "Bearer " + testUser1Token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -237,7 +259,7 @@ class TripIntegrationTest {
         trip.setStartDate(LocalDate.of(2025, 6, 1));
         trip.setEndDate(LocalDate.of(2025, 6, 5));
         trip.setDescription("Test description");
-        trip.setTransportation("Car");
+        trip.setTransportation("car");
         trip.setCreatedDate(LocalDateTime.now());
         return trip;
     }

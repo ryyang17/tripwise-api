@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class TripMapperTest {
@@ -197,6 +198,171 @@ class TripMapperTest {
         // Assert
         assertEquals("Updated Trip", trip.getTripName());
         assertEquals("Paris", trip.getDestination());
+    }
+
+    @Test
+    void updateEntity_WithAllFields_ShouldUpdateCorrectly() {
+        // Arrange
+        UpdateTripRequest updateRequest = new UpdateTripRequest();
+        updateRequest.setTripName("New Name");
+        updateRequest.setStartDate(LocalDate.of(2025, 6, 1));
+        updateRequest.setEndDate(LocalDate.of(2025, 6, 10));
+        updateRequest.setDestination("Berlin");
+        updateRequest.setDescription("New Description");
+        updateRequest.setTransportation("train");
+
+        // Act
+        TripMapper.updateEntity(trip, updateRequest);
+
+        // Assert
+        assertEquals("New Name", trip.getTripName());
+        assertEquals(LocalDate.of(2025, 6, 1), trip.getStartDate());
+        assertEquals(LocalDate.of(2025, 6, 10), trip.getEndDate());
+        assertEquals("Berlin", trip.getDestination());
+        assertEquals("New Description", trip.getDescription());
+        assertEquals("train", trip.getTransportation());
+    }
+
+    @Test
+    void updateEntity_WithNullTrip_ShouldNotThrow() {
+        // Arrange
+        UpdateTripRequest updateRequest = new UpdateTripRequest();
+        updateRequest.setTripName("Test");
+
+        // Act & Assert
+        assertDoesNotThrow(() -> TripMapper.updateEntity(null, updateRequest));
+    }
+
+    @Test
+    void updateEntity_WithNullRequest_ShouldNotThrow() {
+        // Act & Assert
+        assertDoesNotThrow(() -> TripMapper.updateEntity(trip, null));
+    }
+
+    @Test
+    void updateEntity_WithPartialUpdate_ShouldUpdateOnlyProvidedFields() {
+        // Arrange
+        String originalDescription = trip.getDescription();
+        UpdateTripRequest updateRequest = new UpdateTripRequest();
+        updateRequest.setTripName("New Name Only");
+        // Other fields are null
+
+        // Act
+        TripMapper.updateEntity(trip, updateRequest);
+
+        // Assert
+        assertEquals("New Name Only", trip.getTripName());
+        assertEquals(originalDescription, trip.getDescription()); // Should remain unchanged
+    }
+
+    @Test
+    void toResponse_WithNullEndDate_ShouldSetIsActiveFalse() {
+        // Arrange
+        trip.setEndDate(null);
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
+
+        // Act
+        TripResponse result = tripMapper.toResponse(trip);
+
+        // Assert
+        assertFalse(result.getIsActive());
+    }
+
+    @Test
+    void toResponse_WithTodayAsEndDate_ShouldSetIsActiveTrue() {
+        // Arrange
+        trip.setEndDate(LocalDate.now());
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
+
+        // Act
+        TripResponse result = tripMapper.toResponse(trip);
+
+        // Assert
+        assertTrue(result.getIsActive());
+    }
+
+    @Test
+    void toResponse_WithNullUserId_ShouldNotFetchUser() {
+        // Arrange
+        trip.setUserId(null);
+
+        // Act
+        TripResponse result = tripMapper.toResponse(trip);
+
+        // Assert
+        assertNotNull(result);
+        assertNull(result.getOwnerName());
+        assertNull(result.getOwnerEmail());
+        verify(userService, never()).getUserById(any());
+    }
+
+    @Test
+    void toResponseList_WithEmptyList_ShouldReturnEmptyList() {
+        // Act
+        List<TripResponse> result = tripMapper.toResponseList(List.of());
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void toEntity_WithAllFields_ShouldMapCorrectly() {
+        // Act
+        Trip result = TripMapper.toEntity(createRequest);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getUserId());
+        assertEquals("Test Trip", result.getTripName());
+        assertEquals(LocalDate.of(2025, 3, 1), result.getStartDate());
+        assertEquals(LocalDate.of(2025, 3, 5), result.getEndDate());
+        assertEquals("Amsterdam", result.getDestination());
+        assertEquals("Test Description", result.getDescription());
+        assertEquals("Car", result.getTransportation());
+    }
+
+    @Test
+    void toEntity_WithMinimalFields_ShouldMapCorrectly() {
+        // Arrange
+        CreateTripRequest minimalRequest = new CreateTripRequest();
+        minimalRequest.setUserId(1L);
+        minimalRequest.setTripName("Minimal Trip");
+        minimalRequest.setStartDate(LocalDate.now());
+        minimalRequest.setEndDate(LocalDate.now().plusDays(1));
+        minimalRequest.setDestination("Test");
+        minimalRequest.setTransportation("car");
+
+        // Act
+        Trip result = TripMapper.toEntity(minimalRequest);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Minimal Trip", result.getTripName());
+        assertNull(result.getDescription()); // Optional field
+    }
+
+    @Test
+    void toResponse_WithAllFieldsPopulated_ShouldMapAllFields() {
+        // Arrange
+        when(userService.getUserById(1L)).thenReturn(Optional.of(user));
+
+        // Act
+        TripResponse result = tripMapper.toResponse(trip);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getTripId());
+        assertEquals(1L, result.getUserId());
+        assertEquals("Test Trip", result.getTripName());
+        assertEquals(LocalDate.of(2025, 3, 1), result.getStartDate());
+        assertEquals(LocalDate.of(2025, 3, 5), result.getEndDate());
+        assertEquals("Amsterdam", result.getDestination());
+        assertEquals("Test Description", result.getDescription());
+        assertEquals("Car", result.getTransportation());
+        assertNotNull(result.getCreatedDate());
+        assertEquals("testuser", result.getOwnerName());
+        assertEquals("test@example.com", result.getOwnerEmail());
     }
 }
 

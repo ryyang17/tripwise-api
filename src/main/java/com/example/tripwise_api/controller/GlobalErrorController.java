@@ -46,15 +46,16 @@ public class GlobalErrorController implements org.springframework.boot.web.servl
 
 		// Build user-friendly messages for common errors
 		String path = (String) attrs.getOrDefault("path", request.getRequestURI());
+		String sanitizedPath = sanitizePath(path);
 		String originalMessage = String.valueOf(attrs.getOrDefault("message", ""));
-		String friendlyMessage = getFriendlyMessage(status, path, originalMessage);
+		String friendlyMessage = getFriendlyMessage(status, sanitizedPath, originalMessage);
 
 		Map<String, Object> body = new HashMap<>();
 		body.put("timestamp", attrs.get("timestamp"));
 		body.put("status", status);
 		body.put("error", attrs.getOrDefault("error", "Error"));
 		body.put("message", friendlyMessage);
-		body.put("path", sanitizePath(path));
+		body.put("path", sanitizedPath);
 
 		return ResponseEntity.status(status).body(body);
 	}
