@@ -28,35 +28,91 @@ Users can create trips, manage budgets, and add activities to their journeys.
 
 ---
 
-## ⚙️ Local Setup
+## ⚙️ Local Setup (Windows)
 
-### 1. Clone the repository
+### 1. Prerequisites
+- **Java 17+** (e.g., [AdoptOpenJDK](https://adoptium.net/))
+- **Gradle** (included via `./gradlew`)
+- **Docker Desktop** (for containerization)
+- **Git**
 
+### 2. Clone the repository
+
+```powershell
 git clone https://github.com/your-username/tripwise-backend.git
-cd tripwise-backend
+cd "TripWise API"
+```
 
-### 2. Start PostgreSQL locally
+### 3. Configure Environment Variables
 
-Create a new database:
-psql -U postgres
-CREATE DATABASE tripwise;
+You can set environment variables in Windows using PowerShell:
 
-Update your application.properties if needed:
-spring.datasource.url=jdbc:postgresql://localhost:5432/tripwise
-spring.datasource.username=postgres
-spring.datasource.password=yourpassword
-spring.jpa.hibernate.ddl-auto=update
+```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/tripwise"
+$env:SPRING_DATASOURCE_USERNAME="postgres"
+$env:SPRING_DATASOURCE_PASSWORD="yourpassword"
+```
 
-### 3. Run the application
+Or edit `src/main/resources/application.properties` as needed.
 
+### 4. Start PostgreSQL with Docker Compose
+
+A sample `docker-compose.yml` is provided. Start the database with:
+
+```powershell
+docker-compose up -d
+```
+
+This will launch a PostgreSQL instance accessible at `localhost:5432`.
+
+### 5. Create the Database (if not auto-created)
+
+If the database is not created automatically, connect and run:
+
+```powershell
+docker exec -it tripwise-db psql -U postgres -c "CREATE DATABASE tripwise;"
+```
+
+### 6. Run the Application
+
+Build and run with Gradle:
+
+```powershell
 ./gradlew bootRun
+```
 
-The API will be available at:
-http://localhost:8080
+Or on Windows:
 
-### 4. Run with Docker
-Build the image
+```powershell
+./gradlew.bat bootRun
+```
+
+The API will be available at: [http://localhost:8080](http://localhost:8080)
+
+### 7. Run with Docker
+
+Build the image:
+
+```powershell
 docker build -t tripwise-api .
+```
 
-Run the containerized
-docker run -p 8080:8080 --name tripwise-container tripwise-api
+Run the container:
+
+```powershell
+docker run -p 8081:8080 --name tripwise-container --env SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/tripwise --env SPRING_DATASOURCE_USERNAME=postgres --env SPRING_DATASOURCE_PASSWORD=yourpassword tripwise-api
+```
+
+---
+
+## 🛠️ Troubleshooting
+- Ensure Docker Desktop is running.
+- If ports are in use, stop conflicting services or change the port mapping.
+- For database connection issues, check credentials and network settings.
+
+## 🧪 Testing
+Run tests with:
+
+
+
+---
