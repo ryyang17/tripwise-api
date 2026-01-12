@@ -39,6 +39,7 @@ services:
       SPRING_FLYWAY_OUT_OF_ORDER: "true"
       SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "false"
       SPRING_FLYWAY_CLEAN_DISABLED: "false"
+      CORS_ALLOWED_ORIGINS: "http://localhost:3001"
     depends_on:
       db:
         condition: service_healthy
