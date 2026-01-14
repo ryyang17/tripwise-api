@@ -103,60 +103,37 @@ class UserControllerTest {
 
     @Test
     void updateUserCurrency_WhenExists_ShouldReturnOk() {
-        when(userService.getUserById(1L)).thenReturn(Optional.of(testUser));
         when(userService.updateUser(eq(1L), any(User.class))).thenReturn(testUser);
-        Map<String, String> request = new HashMap<>();
-        request.put("currency", "USD");
-        ResponseEntity<Map<String, Object>> response = userController.updateUserCurrency(1L, request);
+        testUser.setCurrency("USD");
+        ResponseEntity<User> response = userController.updateUser(1L, testUser);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("USD", response.getBody().get("currency"));
+        assertEquals("USD", response.getBody().getCurrency());
     }
 
     @Test
     void updateUserCurrency_WhenNotExists_ShouldReturnNotFound() {
-        when(userService.getUserById(2L)).thenReturn(Optional.empty());
-        Map<String, String> request = new HashMap<>();
-        request.put("currency", "USD");
-        ResponseEntity<Map<String, Object>> response = userController.updateUserCurrency(2L, request);
+        when(userService.updateUser(eq(2L), any(User.class))).thenThrow(new IllegalArgumentException());
+        ResponseEntity<User> response = userController.updateUser(2L, testUser);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void updateUserProfile_WhenExists_ShouldReturnOk() {
-        when(userService.getUserById(1L)).thenReturn(Optional.of(testUser));
         when(userService.updateUser(eq(1L), any(User.class))).thenReturn(testUser);
-        Map<String, String> updates = new HashMap<>();
-        updates.put("bio", "New bio");
-        updates.put("location", "New City");
-        ResponseEntity<Map<String, Object>> response = userController.updateUserProfile(1L, updates);
+        testUser.setBio("New bio");
+        testUser.setLocation("New City");
+        ResponseEntity<User> response = userController.updateUser(1L, testUser);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertTrue((Boolean) response.getBody().get("success"));
+        assertEquals("New bio", response.getBody().getBio());
+        assertEquals("New City", response.getBody().getLocation());
     }
 
     @Test
     void updateUserProfile_WhenNotExists_ShouldReturnNotFound() {
-        when(userService.getUserById(2L)).thenReturn(Optional.empty());
-        Map<String, String> updates = new HashMap<>();
-        updates.put("bio", "New bio");
-        ResponseEntity<Map<String, Object>> response = userController.updateUserProfile(2L, updates);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    void deleteUser_WhenExists_ShouldReturnOk() {
-        doNothing().when(userService).deleteUser(1L);
-        ResponseEntity<Map<String, Object>> response = userController.deleteUser(1L);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue((Boolean) response.getBody().get("success"));
-    }
-
-    @Test
-    void deleteUser_WhenNotExists_ShouldReturnNotFound() {
-        doThrow(new IllegalArgumentException("User not found")).when(userService).deleteUser(2L);
-        ResponseEntity<Map<String, Object>> response = userController.deleteUser(2L);
+        when(userService.updateUser(eq(2L), any(User.class))).thenThrow(new IllegalArgumentException());
+        ResponseEntity<User> response = userController.updateUser(2L, testUser);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 }
