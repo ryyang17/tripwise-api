@@ -29,7 +29,15 @@ RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/ap
 EXPOSE 8080
 
 # Add healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Set default Spring profile to prod
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# Run with prod profile and proper JVM settings
+ENTRYPOINT ["java", \
+    "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}", \
+    "-Djava.security.egd=file:/dev/./urandom", \
+    "-jar", \
+    "app.jar"]

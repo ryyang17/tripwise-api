@@ -1,0 +1,42 @@
+# Render.com Blueprint Configuration
+# This file helps configure your service on Render
+
+services:
+  - type: web
+    name: tripwise-api
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: tripwise-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: tripwise-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: tripwise-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-frontend.onrender.com
+      - key: COOKIE_SECURE
+        value: true
+      - key: COOKIE_SAME_SITE
+        value: None
+
+databases:
+  - name: tripwise-db
+    databaseName: tripwise
+    user: tripwise_user
+    plan: free
+
