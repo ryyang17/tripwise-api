@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 public class UserResponse {
+    private Long id;
     private Long userId;
     private String username;
     private String name;
@@ -27,8 +28,14 @@ public class UserResponse {
     public UserResponse() {}
 
     // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
     public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public void setUserId(Long userId) {
+        this.userId = userId;
+        this.id = userId;
+    }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

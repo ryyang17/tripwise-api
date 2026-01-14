@@ -16,8 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -37,9 +35,6 @@ public class SecurityConfig {
 
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
-
-    @Value("${security.csrf.enabled:true}")
-    private boolean csrfEnabled;
 
     public SecurityConfig(UserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
@@ -66,24 +61,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // CSRF Token Handler for stateless applications
-        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
-        requestHandler.setCsrfRequestAttributeName("_csrf");
-
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        // Configure CSRF based on environment
-        if (csrfEnabled) {
-            // Enable CSRF with cookie-based token repository for stateless apps
-            http.csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .csrfTokenRequestHandler(requestHandler)
-                .ignoringRequestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh")
-            );
-        } else {
-            // Disable CSRF for test environments
-            http.csrf(AbstractHttpConfigurer::disable);
-        }
+        // Disable CSRF for stateless JWT-based API
+        // JWT tokens in Authorization header provide sufficient protection
+        http.csrf(AbstractHttpConfigurer::disable);
 
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // Security headers
@@ -148,8 +130,8 @@ public class SecurityConfig {
         }
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With", "X-XSRF-TOKEN"));
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
@@ -158,3 +140,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

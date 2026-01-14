@@ -111,86 +111,54 @@ public class UserController {
         }
     }
 
-    // PATCH /api/users/{id}/currency - Update user's preferred currency only
-    @PatchMapping("/{id}/currency")
-    public ResponseEntity<Map<String, Object>> updateUserCurrency(@PathVariable Long id, @RequestBody Map<String, String> request) {
-        try {
-            Optional<User> userOpt = userService.getUserById(id);
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
+    // PATCH /api/users/me - Update current user's profile (bio, location, currency, etc.)
+    @PatchMapping("/me")
+    public ResponseEntity<Map<String, Object>> updateCurrentUserProfile(@RequestBody Map<String, String> updates) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            User user = userOpt.get();
-            user.setCurrency(request.get("currency"));
-            User updatedUser = userService.updateUser(id, user);
-
-            Map<String, Object> response = buildSuccessResponse("Currency preference updated successfully");
-            response.put("currency", updatedUser.getCurrency());
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    // PATCH /api/users/{id}/profile - Update user profile (bio, location, etc.)
-    @PatchMapping("/{id}/profile")
-    public ResponseEntity<Map<String, Object>> updateUserProfile(@PathVariable Long id, @RequestBody Map<String, String> updates) {
-        try {
-            Optional<User> userOpt = userService.getUserById(id);
-            if (userOpt.isEmpty()) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("error", "User not found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-            }
-
-            User user = userOpt.get();
-
-            // Update only provided fields
-            if (updates.containsKey("bio")) {
-                user.setBio(updates.get("bio"));
-            }
-            if (updates.containsKey("location")) {
-                user.setLocation(updates.get("location"));
-            }
-            if (updates.containsKey("favoriteDestination")) {
-                user.setFavoriteDestination(updates.get("favoriteDestination"));
-            }
-            if (updates.containsKey("travelStyle")) {
-                user.setTravelStyle(updates.get("travelStyle"));
-            }
-            if (updates.containsKey("notifications")) {
-                user.setNotifications(Boolean.parseBoolean(updates.get("notifications")));
-            }
-            if (updates.containsKey("currency")) {
-                user.setCurrency(updates.get("currency"));
-            }
-
-            User updatedUser = userService.updateUser(id, user);
-
-            Map<String, Object> response = buildSuccessResponse("Profile updated successfully");
-            response.put("user", createUserResponse(updatedUser));
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            errorResponse.put("error", "Not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-    }
 
-    // DELETE /api/users/{id} - Delete user
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            Map<String, Object> response = buildSuccessResponse("User deleted successfully");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
+        String username = authentication.getName();
+        Optional<User> userOpt = userService.findByUsername(username);
+
+        if (userOpt.isEmpty()) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
+            errorResponse.put("error", "User not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
+
+        User user = userOpt.get();
+
+        // Update only provided fields
+        if (updates.containsKey("bio")) {
+            user.setBio(updates.get("bio"));
+        }
+        if (updates.containsKey("location")) {
+            user.setLocation(updates.get("location"));
+        }
+        if (updates.containsKey("favoriteDestination")) {
+            user.setFavoriteDestination(updates.get("favoriteDestination"));
+        }
+        if (updates.containsKey("travelStyle")) {
+            user.setTravelStyle(updates.get("travelStyle"));
+        }
+        if (updates.containsKey("notifications")) {
+            user.setNotifications(Boolean.parseBoolean(updates.get("notifications")));
+        }
+        if (updates.containsKey("currency")) {
+            user.setCurrency(updates.get("currency"));
+        }
+
+        User updatedUser = userService.updateUser(user.getId(), user);
+
+        Map<String, Object> response = buildSuccessResponse("Profile updated successfully");
+        response.put("user", createUserResponse(updatedUser));
+
+        return ResponseEntity.ok(response);
     }
 
     // Helper to build a standard success response map
