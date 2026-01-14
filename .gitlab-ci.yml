@@ -144,33 +144,4 @@ docker-image:
     - if: $CI_PIPELINE_SOURCE == "push"
       when: always
 
-# Deploy with docker compose; assumes target runner has Docker and docker-compose
-deploy:
-  stage: deploy
-  image: docker:27.3.1
-  services:
-    - docker:27.3.1-dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-  script:
-    - echo "Pulling latest images"
-    - docker pull postgres:16 || true
-    - docker pull "$IMAGE_NAME:latest"
-    - |
-      if [ "$(docker ps -aq -f name=tripwise-app)" ]; then
-        docker rm -f tripwise-app || true
-      fi
-      if [ "$(docker ps -aq -f name=TripWise-DB)" ]; then
-        docker rm -f TripWise-DB || true
-      fi
-    - docker compose pull || true
-    - docker compose up -d --force-recreate
-    - docker compose ps
-  needs:
-    - job: docker-image
-  rules:
-    - if: $CI_COMMIT_BRANCH == "production"
-      when: always
-    - when: never
+
