@@ -105,6 +105,8 @@ public class SecurityConfig {
                 ))
             )
             .authorizeHttpRequests(auth -> auth
+                // Public endpoints (root and favicon)
+                .requestMatchers("/", "/favicon.ico").permitAll()
                 // Public authentication endpoints
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/validate").permitAll()
                 // Swagger/OpenAPI documentation endpoints

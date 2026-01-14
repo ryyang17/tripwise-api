@@ -35,8 +35,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String requestURI = request.getRequestURI();
 
         // Skip JWT validation for public endpoints
-        if (requestURI.startsWith("/api/auth/") || 
-            requestURI.startsWith("/swagger-ui") || 
+        if (requestURI.equals("/") ||
+            requestURI.equals("/favicon.ico") ||
+            requestURI.startsWith("/api/auth/") ||
+            requestURI.startsWith("/swagger-ui") ||
             requestURI.startsWith("/v3/api-docs") ||
             requestURI.startsWith("/actuator/") ||
             requestURI.startsWith("/error")) {
@@ -64,20 +66,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.security.SignatureException e) {
                 logger.warn("Invalid JWT token for request to: " + requestURI);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Invalid token\"}");
+                response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
                 response.getWriter().flush();
                 return;
             } catch (Exception e) {
                 logger.error("JWT token extraction failed: " + e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Token extraction failed\"}");
+                response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
                 response.getWriter().flush();
                 return;
             }
         } else {
             logger.debug("No Bearer token found in Authorization header for: " + requestURI);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\":\"Missing token\"}");
+            response.getWriter().write("{\"error\":\"Authentication required\",\"message\":\"Please log in to access this resource\"}");
             response.getWriter().flush();
             return;
         }
@@ -96,14 +98,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 } else {
                     logger.warn("Access token validation failed for user: " + username);
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("{\"error\":\"Invalid access token\"}");
+                    response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
                     response.getWriter().flush();
                     return;
                 }
             } catch (Exception e) {
                 logger.error("Error during authentication: " + e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Authentication error\"}");
+                response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
                 response.getWriter().flush();
                 return;
             }
