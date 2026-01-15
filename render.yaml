@@ -37,6 +37,11 @@ services:
         value: "true"
       - key: COOKIE_SAME_SITE
         value: None
+      # Add logging configuration for debugging
+      - key: LOGGING_LEVEL_ORG_FLYWAYDB
+        value: DEBUG
+      - key: LOGGING_LEVEL_COM_EXAMPLE_TRIPWISE_API_CONFIG
+        value: DEBUG
 
 databases:
   - name: tripwise-db
