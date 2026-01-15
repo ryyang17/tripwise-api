@@ -4,7 +4,7 @@
 services:
   - type: web
     name: tripwise-api
-    env: docker
+    runtime: docker
     plan: free
     region: oregon
     branch: main
@@ -40,7 +40,6 @@ services:
 
 databases:
   - name: tripwise-db
-    databaseName: tripwise
+    databaseName: tripwise_db
     user: tripwise_user
     plan: free
-
