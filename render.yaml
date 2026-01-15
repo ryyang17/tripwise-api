@@ -40,7 +40,7 @@ services:
 
 databases:
   - name: tripwise-db
-    databaseName: tripwise
+    databaseName: tripwise_db
     user: tripwise_user
     plan: free
 
