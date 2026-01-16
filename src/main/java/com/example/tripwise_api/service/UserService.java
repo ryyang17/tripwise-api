@@ -98,4 +98,33 @@ public class UserService {
         }
         userDAL.deleteUser(id);
     }
+
+    public boolean changePassword(String username, String currentPassword, String newPassword) {
+        Optional<User> userOpt = userDAL.findByUsername(username);
+
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        User user = userOpt.get();
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false; // Current password is incorrect
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userDAL.saveUser(user);
+
+        return true; // Password successfully changed
+    }
+
+    /**
+     * Save user directly without any password encoding.
+     * Use this when the password is already encoded (e.g., in password reset flow).
+     */
+    public User saveUserDirectly(User user) {
+        return userDAL.saveUser(user);
+    }
 }

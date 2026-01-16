@@ -2,11 +2,13 @@ package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.service.UserService;
+import com.example.tripwise_api.dto.request.ChangePasswordRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.Optional;
 import java.util.Map;
@@ -159,6 +161,52 @@ public class UserController {
         response.put("user", createUserResponse(updatedUser));
 
         return ResponseEntity.ok(response);
+    }
+
+    // PATCH /api/users/me/change-password - Change current user's password
+    @PatchMapping("/me/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+
+        // Validate that new password and confirm password match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "New password and confirm password do not match");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+
+        // Validate that new password is different from current password
+        if (request.getCurrentPassword().equals(request.getNewPassword())) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "New password must be different from current password");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+
+        String username = authentication.getName();
+
+        try {
+            boolean success = userService.changePassword(username, request.getCurrentPassword(), request.getNewPassword());
+
+            if (!success) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Current password is incorrect");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+
+            Map<String, Object> response = buildSuccessResponse("Password changed successfully");
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
     }
 
     // Helper to build a standard success response map

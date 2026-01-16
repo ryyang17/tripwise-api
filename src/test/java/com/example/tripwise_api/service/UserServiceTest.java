@@ -508,4 +508,78 @@ class UserServiceTest {
         verify(passwordEncoder, times(1)).encode("plainPassword");
         verify(userDAL, times(1)).saveUser(newUser);
     }
+
+    @Test
+    void changePassword_WithValidCurrentPassword_ShouldSucceed() {
+        // Arrange
+        String username = "testuser";
+        String currentPassword = "oldPassword";
+        String newPassword = "newPassword123";
+        String encodedOldPassword = "encodedOldPassword";
+        String encodedNewPassword = "encodedNewPassword";
+
+        validUser.setPassword(encodedOldPassword);
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.of(validUser));
+        when(passwordEncoder.matches(currentPassword, encodedOldPassword)).thenReturn(true);
+        when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
+        when(userDAL.saveUser(any(User.class))).thenReturn(validUser);
+
+        // Act
+        boolean result = userService.changePassword(username, currentPassword, newPassword);
+
+        // Assert
+        assertTrue(result);
+        verify(userDAL).findByUsername(username);
+        verify(passwordEncoder).matches(currentPassword, encodedOldPassword);
+        verify(passwordEncoder).encode(newPassword);
+        verify(userDAL).saveUser(validUser);
+    }
+
+    @Test
+    void changePassword_WithInvalidCurrentPassword_ShouldReturnFalse() {
+        // Arrange
+        String username = "testuser";
+        String currentPassword = "wrongPassword";
+        String newPassword = "newPassword123";
+        String encodedOldPassword = "encodedOldPassword";
+
+        validUser.setPassword(encodedOldPassword);
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.of(validUser));
+        when(passwordEncoder.matches(currentPassword, encodedOldPassword)).thenReturn(false);
+
+        // Act
+        boolean result = userService.changePassword(username, currentPassword, newPassword);
+
+        // Assert
+        assertFalse(result);
+        verify(userDAL).findByUsername(username);
+        verify(passwordEncoder).matches(currentPassword, encodedOldPassword);
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userDAL, never()).saveUser(any(User.class));
+    }
+
+    @Test
+    void changePassword_WithNonExistentUser_ShouldThrowException() {
+        // Arrange
+        String username = "nonexistent";
+        String currentPassword = "password";
+        String newPassword = "newPassword123";
+
+        when(userDAL.findByUsername(username)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.changePassword(username, currentPassword, newPassword)
+        );
+
+        assertEquals("User not found", exception.getMessage());
+        verify(userDAL).findByUsername(username);
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(userDAL, never()).saveUser(any(User.class));
+    }
 }
+
+

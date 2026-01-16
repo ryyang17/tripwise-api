@@ -91,6 +91,8 @@ public class SecurityConfig {
                 .requestMatchers("/", "/favicon.ico").permitAll()
                 // Public authentication endpoints
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/validate").permitAll()
+                // Password reset endpoints
+                .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/validate-reset-token").permitAll()
                 // Swagger/OpenAPI documentation endpoints
                 .requestMatchers(
                     "/swagger-ui/**",

@@ -4,7 +4,6 @@ package com.example.tripwise_api.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
@@ -24,13 +23,13 @@ class CurrencyServiceTest {
     @Mock
     private RestTemplate restTemplate;
 
-    @InjectMocks
     private CurrencyService currencyService;
-
-  
 
     @BeforeEach
     void setUp() {
+        // Create CurrencyService with test timeout values
+        currencyService = new CurrencyService(15000, 30000);
+
         // Use reflection to inject the mocked RestTemplate
         try {
             var field = CurrencyService.class.getDeclaredField("restTemplate");

@@ -1,9 +1,11 @@
 package com.example.tripwise_api.service;
 
 import com.example.tripwise_api.service.exception.CurrencyNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +18,21 @@ import java.util.HashMap;
 public class CurrencyService {
 
     private static final Logger logger = LoggerFactory.getLogger(CurrencyService.class);
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public CurrencyService(
+            @Value("${http.client.connection-timeout:15000}") int connectionTimeout,
+            @Value("${http.client.read-timeout:30000}") int readTimeout) {
+
+        this.restTemplate = new RestTemplate();
+
+        // Configure timeout settings from properties
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(connectionTimeout);
+        factory.setReadTimeout(readTimeout);
+
+        restTemplate.setRequestFactory(factory);
+    }
 
     // Fallback exchange rates for when API is unavailable
     private final Map<String, BigDecimal> fallbackRates = Map.of(
