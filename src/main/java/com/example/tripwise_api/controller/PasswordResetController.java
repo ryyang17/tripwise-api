@@ -2,6 +2,7 @@ package com.example.tripwise_api.controller;
 
 import com.example.tripwise_api.dto.request.ResetPasswordRequest;
 import com.example.tripwise_api.service.PasswordResetService;
+import com.example.tripwise_api.service.exception.UserNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +61,10 @@ public class PasswordResetController {
 
             return ResponseEntity.ok(response);
 
+        } catch (UserNotFoundException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "User and email not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "An error occurred while processing your request");
@@ -116,4 +121,3 @@ public class PasswordResetController {
         }
     }
 }
-

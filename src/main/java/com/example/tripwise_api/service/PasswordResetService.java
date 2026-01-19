@@ -3,6 +3,7 @@ package com.example.tripwise_api.service;
 import com.example.tripwise_api.model.PasswordResetToken;
 import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.repository.PasswordResetTokenRepository;
+import com.example.tripwise_api.service.exception.UserNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,22 +34,14 @@ public class PasswordResetService {
 
     /**
      * Create a password reset token for a user (identified by username and email)
-     * Returns the token string if successful, null if user not found
+     * Returns the token string if successful, throws UserNotFoundException if user not found or email does not match
      */
     public String createPasswordResetToken(String username, String email) {
-        // Find user by username
         Optional<User> userOpt = userService.findByUsername(username);
-
-        if (userOpt.isEmpty()) {
-            return null;
+        if (userOpt.isEmpty() || !userOpt.get().getEmail().equalsIgnoreCase(email)) {
+            throw new UserNotFoundException("User and email not found");
         }
-
         User user = userOpt.get();
-
-        // Verify email matches
-        if (!user.getEmail().equalsIgnoreCase(email)) {
-            return null;
-        }
 
         // Delete any existing tokens for this user
         tokenRepository.deleteByUser(user);
@@ -112,4 +105,3 @@ public class PasswordResetService {
         tokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
     }
 }
-

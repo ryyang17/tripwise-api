@@ -3,6 +3,7 @@ package com.example.tripwise_api.service;
 import com.example.tripwise_api.model.PasswordResetToken;
 import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.repository.PasswordResetTokenRepository;
+import com.example.tripwise_api.service.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -54,17 +55,35 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void createPasswordResetToken_WithInvalidEmail_ShouldReturnNull() {
+    void createPasswordResetToken_WithInvalidEmail_ShouldThrowUserNotFoundException() {
         when(userService.findByUsername("testuser")).thenReturn(Optional.of(user));
-        String result = passwordResetService.createPasswordResetToken("testuser", "wrong@example.com");
-        assertNull(result);
+        assertThrows(UserNotFoundException.class, () ->
+            passwordResetService.createPasswordResetToken("testuser", "wrong@example.com")
+        );
     }
 
     @Test
-    void createPasswordResetToken_WithNonExistentUser_ShouldReturnNull() {
+    void createPasswordResetToken_WithNonExistentUser_ShouldThrowUserNotFoundException() {
         when(userService.findByUsername("nouser")).thenReturn(Optional.empty());
-        String result = passwordResetService.createPasswordResetToken("nouser", "test@example.com");
-        assertNull(result);
+        assertThrows(UserNotFoundException.class, () ->
+            passwordResetService.createPasswordResetToken("nouser", "test@example.com")
+        );
+    }
+
+    @Test
+    void createPasswordResetToken_WithNullUsername_ShouldThrowUserNotFoundException() {
+        when(userService.findByUsername(null)).thenReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () ->
+            passwordResetService.createPasswordResetToken(null, "test@example.com")
+        );
+    }
+
+    @Test
+    void createPasswordResetToken_WithNullEmail_ShouldThrowUserNotFoundException() {
+        when(userService.findByUsername("testuser")).thenReturn(Optional.of(user));
+        assertThrows(UserNotFoundException.class, () ->
+            passwordResetService.createPasswordResetToken("testuser", null)
+        );
     }
 
     @Test
@@ -134,4 +153,3 @@ class PasswordResetServiceTest {
         assertFalse(passwordResetService.validateToken("invalidToken"));
     }
 }
-
