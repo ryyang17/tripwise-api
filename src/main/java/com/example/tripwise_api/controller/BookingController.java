@@ -7,11 +7,10 @@ import com.example.tripwise_api.model.Booking;
 import com.example.tripwise_api.model.User;
 import com.example.tripwise_api.service.BookingService;
 import com.example.tripwise_api.service.UserService;
+import com.example.tripwise_api.util.ControllerUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,24 +34,18 @@ public class BookingController {
     public ResponseEntity<?> createBooking(
             @PathVariable Long tripId,
             @Valid @RequestBody CreateBookingRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        Optional<String> usernameOpt = ControllerUtils.getAuthenticatedUsername();
+        if (usernameOpt.isEmpty()) {
+            return ControllerUtils.unauthorized();
         }
-
-        String username = authentication.getName();
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userService.findByUsername(usernameOpt.get());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
         User user = userOpt.get();
-
-        // Basic validation
         if (request.getRawPayload() == null || request.getRawPayload().isBlank()) {
             return ResponseEntity.badRequest().body("rawPayload is required");
         }
-
         try {
             Booking booking = BookingMapper.toEntity(request);
             Booking saved = bookingService.createBookingForUser(user, booking, tripId);
@@ -68,17 +61,14 @@ public class BookingController {
     // GET /api/trips/{tripId}/bookings - get all bookings for a specific trip
     @GetMapping("/trips/{tripId}/bookings")
     public ResponseEntity<?> getBookingsByTrip(@PathVariable Long tripId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        Optional<String> usernameOpt = ControllerUtils.getAuthenticatedUsername();
+        if (usernameOpt.isEmpty()) {
+            return ControllerUtils.unauthorized();
         }
-
-        String username = authentication.getName();
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userService.findByUsername(usernameOpt.get());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
         User user = userOpt.get();
         List<Booking> bookings = bookingService.getBookingsByTripId(tripId, user.getId());
         return ResponseEntity.ok(BookingMapper.toResponseList(bookings));
@@ -87,56 +77,46 @@ public class BookingController {
     // GET /api/bookings/{id} - get booking by id for current user
     @GetMapping("/bookings/{id}")
     public ResponseEntity<?> getBookingById(@PathVariable Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        Optional<String> usernameOpt = ControllerUtils.getAuthenticatedUsername();
+        if (usernameOpt.isEmpty()) {
+            return ControllerUtils.unauthorized();
         }
-
-        String username = authentication.getName();
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userService.findByUsername(usernameOpt.get());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
         User user = userOpt.get();
         Optional<Booking> bookingOpt = bookingService.getBookingById(id);
         if (bookingOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         Booking booking = bookingOpt.get();
         if (!booking.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            return ControllerUtils.forbidden("Access denied");
         }
-
         return ResponseEntity.ok(BookingMapper.toResponse(booking));
     }
 
     // DELETE /api/bookings/{id} - delete booking by id for current user
     @DeleteMapping("/bookings/{id}")
     public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        Optional<String> usernameOpt = ControllerUtils.getAuthenticatedUsername();
+        if (usernameOpt.isEmpty()) {
+            return ControllerUtils.unauthorized();
         }
-
-        String username = authentication.getName();
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userService.findByUsername(usernameOpt.get());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
         User user = userOpt.get();
         Optional<Booking> bookingOpt = bookingService.getBookingById(id);
         if (bookingOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         Booking booking = bookingOpt.get();
         if (!booking.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            return ControllerUtils.forbidden("Access denied");
         }
-
         try {
             bookingService.deleteBooking(id);
             return ResponseEntity.ok().build();
@@ -150,28 +130,23 @@ public class BookingController {
     public ResponseEntity<?> updateBooking(
             @PathVariable Long id,
             @Valid @RequestBody CreateBookingRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        Optional<String> usernameOpt = ControllerUtils.getAuthenticatedUsername();
+        if (usernameOpt.isEmpty()) {
+            return ControllerUtils.unauthorized();
         }
-
-        String username = authentication.getName();
-        Optional<User> userOpt = userService.findByUsername(username);
+        Optional<User> userOpt = userService.findByUsername(usernameOpt.get());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
         User user = userOpt.get();
         Optional<Booking> bookingOpt = bookingService.getBookingById(id);
         if (bookingOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         Booking booking = bookingOpt.get();
         if (!booking.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            return ControllerUtils.forbidden("Access denied");
         }
-
         try {
             Booking updated = bookingService.updateBooking(id, request);
             BookingResponse resp = BookingMapper.toResponse(updated);
