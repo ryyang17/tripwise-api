@@ -3,7 +3,6 @@ package com.example.tripwise_api.dto.mapper;
 import com.example.tripwise_api.dto.request.CreateBookingRequest;
 import com.example.tripwise_api.dto.response.BookingResponse;
 import com.example.tripwise_api.model.Booking;
-import com.example.tripwise_api.model.BookingType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,14 +13,13 @@ public class BookingMapper {
         Booking b = new Booking();
         if (req.getBookingType() != null) {
             try {
-                b.setBookingType(BookingType.valueOf(req.getBookingType().toUpperCase()));
+                b.setBookingType(com.example.tripwise_api.model.BookingType.valueOf(req.getBookingType().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                b.setBookingType(BookingType.OTHER);
+                b.setBookingType(com.example.tripwise_api.model.BookingType.OTHER);
             }
         } else {
-            b.setBookingType(BookingType.OTHER);
+            b.setBookingType(com.example.tripwise_api.model.BookingType.OTHER);
         }
-
         b.setProvider(req.getProvider());
         b.setBookingReference(req.getBookingReference());
         b.setPrice(req.getPrice());

@@ -40,4 +40,3 @@ public class MapMapper {
                 .collect(Collectors.toList());
     }
 }
-

@@ -27,9 +27,8 @@ public class ExpenseShareMapper {
      * Convert een lijst van ExpenseShare entities naar een Map van userId -> amount
      */
     public Map<Long, BigDecimal> toUserSharesMap(List<ExpenseShare> shares) {
-        if (shares == null) return new HashMap<>();
-
         Map<Long, BigDecimal> result = new HashMap<>();
+        if (shares == null) return result;
         for (ExpenseShare share : shares) {
             result.put(share.getUserId(), share.getAmount());
         }
@@ -41,33 +40,43 @@ public class ExpenseShareMapper {
      * met uitgebreide informatie zoals username en settled status
      */
     public Map<Long, ShareDetails> toDetailedSharesMap(List<ExpenseShare> shares) {
-        if (shares == null) return new HashMap<>();
-
         Map<Long, ShareDetails> result = new HashMap<>();
+        if (shares == null) return result;
         for (ExpenseShare share : shares) {
-            ShareDetails details = new ShareDetails();
-            details.setUserId(share.getUserId());
-            details.setAmount(share.getAmount());
-            details.setIsSettled(share.getIsSettled());
-
-            // Use the User relationship from ExpenseShare if available
-            User user = share.getUser();
-            if (user == null) {
-                // Fallback to fetching user via UserService
-                Optional<User> userOpt = userService.getUserById(share.getUserId());
-                if (userOpt.isPresent()) {
-                    user = userOpt.get();
-                }
-            }
-
-            if (user != null) {
-                details.setUserName(user.getUsername());
-                details.setUserEmail(user.getEmail());
-            }
-
+            User user = resolveUser(share);
+            ShareDetails details = toShareDetails(share, user);
             result.put(share.getUserId(), details);
         }
         return result;
+    }
+
+    /**
+     * Resolve User from ExpenseShare, using UserService as fallback
+     */
+    private User resolveUser(ExpenseShare share) {
+        User user = share.getUser();
+        if (user == null) {
+            Optional<User> userOpt = userService.getUserById(share.getUserId());
+            if (userOpt.isPresent()) {
+                user = userOpt.get();
+            }
+        }
+        return user;
+    }
+
+    /**
+     * Populate ShareDetails from ExpenseShare and User
+     */
+    private ShareDetails toShareDetails(ExpenseShare share, User user) {
+        ShareDetails details = new ShareDetails();
+        details.setUserId(share.getUserId());
+        details.setAmount(share.getAmount());
+        details.setIsSettled(share.getIsSettled());
+        if (user != null) {
+            details.setUserName(user.getUsername());
+            details.setUserEmail(user.getEmail());
+        }
+        return details;
     }
 
     /**
@@ -96,4 +105,3 @@ public class ExpenseShareMapper {
         public void setIsSettled(Boolean isSettled) { this.isSettled = isSettled; }
     }
 }
-

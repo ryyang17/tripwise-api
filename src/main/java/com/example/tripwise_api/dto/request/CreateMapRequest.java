@@ -1,13 +1,6 @@
 package com.example.tripwise_api.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-
-public class CreateMapRequest {
-
-    @NotBlank
-    private String provider;
-
-    // Waypoints as JSON string (array of coordinates)
+public class CreateMapRequest extends BaseRequest {
     private String waypoints;
 
     private String distance;
@@ -16,19 +9,7 @@ public class CreateMapRequest {
 
     private String location;
 
-    // Full raw payload from map API as JSON string
-    @NotBlank
-    private String rawPayload;
-
     public CreateMapRequest() {
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
     }
 
     public String getWaypoints() {
@@ -62,13 +43,4 @@ public class CreateMapRequest {
     public void setLocation(String location) {
         this.location = location;
     }
-
-    public String getRawPayload() {
-        return rawPayload;
-    }
-
-    public void setRawPayload(String rawPayload) {
-        this.rawPayload = rawPayload;
-    }
 }
-

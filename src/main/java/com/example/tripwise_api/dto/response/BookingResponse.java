@@ -1,38 +1,15 @@
 package com.example.tripwise_api.dto.response;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-public class BookingResponse {
-    private Long id;
-    private Long tripId;
+public class BookingResponse extends BaseResponse {
     private String bookingType;
-    private String provider;
     private String bookingReference;
     private BigDecimal price;
     private String currency;
     private String searchParams;
-    private String rawPayload;
-    private LocalDateTime createdDate;
 
-    public BookingResponse() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getTripId() {
-        return tripId;
-    }
-
-    public void setTripId(Long tripId) {
-        this.tripId = tripId;
-    }
+    public BookingResponse() {}
 
     public String getBookingType() {
         return bookingType;
@@ -40,14 +17,6 @@ public class BookingResponse {
 
     public void setBookingType(String bookingType) {
         this.bookingType = bookingType;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
     }
 
     public String getBookingReference() {
@@ -80,21 +49,5 @@ public class BookingResponse {
 
     public void setSearchParams(String searchParams) {
         this.searchParams = searchParams;
-    }
-
-    public String getRawPayload() {
-        return rawPayload;
-    }
-
-    public void setRawPayload(String rawPayload) {
-        this.rawPayload = rawPayload;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
     }
 }

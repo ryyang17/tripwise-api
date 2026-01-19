@@ -46,8 +46,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String username = null;
-        String jwt = null;
+        String username;
+        String jwt;
 
         logger.debug("Processing request to: " + requestURI);
         logger.debug("Authorization header present: " + (authorizationHeader != null));
@@ -59,28 +59,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.debug("Extracted username from JWT: " + username);
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 logger.warn("JWT token is expired for request to: " + requestURI);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Access token expired\",\"message\":\"Please refresh your token\"}");
-                response.getWriter().flush();
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Access token expired", "Please refresh your token");
                 return;
             } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.security.SignatureException e) {
                 logger.warn("Invalid JWT token for request to: " + requestURI);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
-                response.getWriter().flush();
+                sendAuthFailedResponse(response);
                 return;
             } catch (Exception e) {
                 logger.error("JWT token extraction failed: " + e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
-                response.getWriter().flush();
+                sendAuthFailedResponse(response);
                 return;
             }
         } else {
             logger.debug("No Bearer token found in Authorization header for: " + requestURI);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\":\"Authentication required\",\"message\":\"Please log in to access this resource\"}");
-            response.getWriter().flush();
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required", "Please log in to access this resource");
             return;
         }
 
@@ -97,20 +89,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     logger.debug("Successfully authenticated user: " + username);
                 } else {
                     logger.warn("Access token validation failed for user: " + username);
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
-                    response.getWriter().flush();
+                    sendAuthFailedResponse(response);
                     return;
                 }
             } catch (Exception e) {
                 logger.error("Error during authentication: " + e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Authentication failed\",\"message\":\"Please log in again\"}");
-                response.getWriter().flush();
+                sendAuthFailedResponse(response);
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, int status, String error, String message) throws IOException {
+        // 'status' is always HttpServletResponse.SC_UNAUTHORIZED in current usage, but method kept flexible for future use
+        response.setStatus(status);
+        response.getWriter().write(String.format("{\"error\":\"%s\",\"message\":\"%s\"}", error, message));
+        response.getWriter().flush();
+    }
+
+    private void sendAuthFailedResponse(HttpServletResponse response) throws IOException {
+        sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed", "Please log in again");
     }
 }
