@@ -118,3 +118,43 @@ Or set environment variable:
 ```bash
 export SPRING_PROFILES_ACTIVE=prod
 ```
+
+## Forgot Password & Password Reset
+
+TripWise API provides a secure password reset flow for users who have forgotten their password. The process uses time-limited tokens and email verification to ensure security.
+
+### Password Reset Flow
+1. **Request Password Reset**
+   - User submits their username and email to `/api/auth/forgot-password`.
+   - If valid, the backend generates a password reset token (valid for 1 hour) and (optionally) sends it to the user's email.
+   - For security, the response does not reveal whether the user exists.
+
+2. **Validate Reset Token**
+   - Frontend can verify a token's validity by calling `/api/auth/validate-reset-token?token=...`.
+   - Returns whether the token is valid or expired.
+
+3. **Reset Password**
+   - User submits the token, new password, and confirm password to `/api/auth/reset-password`.
+   - If the token is valid and passwords match, the password is updated and the token is marked as used.
+
+### API Endpoints
+| Method | Endpoint                        | Description                                 | Request Body                | Response |
+|--------|----------------------------------|---------------------------------------------|-----------------------------|----------|
+| POST   | `/api/auth/forgot-password`      | Request password reset                      | `{ "username", "email" }` | Success message (no user info) |
+| GET    | `/api/auth/validate-reset-token` | Validate password reset token               | Query param `token`         | Valid/invalid message |
+| POST   | `/api/auth/reset-password`       | Reset password using token                  | `ResetPasswordRequest`      | Success/error message |
+
+
+### Security Features
+- **Token Expiry**: Reset tokens expire after 1 hour.
+- **Single Use**: Tokens are marked as used after a successful reset.
+- **No User Disclosure**: The API does not reveal whether a username/email exists.
+- **Password Encoding**: New passwords are securely encoded before saving.
+
+### Configuration
+- Token expiry is set to 1 hour in the backend (`PasswordResetService`).
+- Email delivery (if implemented) should use a secure provider and template.
+
+### Notes
+- For production, ensure email delivery is enabled and secure.
+- Consider rate limiting password reset requests to prevent abuse.
