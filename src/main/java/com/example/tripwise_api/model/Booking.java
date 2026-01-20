@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "booking")
+@AttributeOverride(name = "id", column = @Column(name = "booking_id"))
 public class Booking extends BaseTripwiseEntity {
 
     @Enumerated(EnumType.STRING)

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "map")
+@AttributeOverride(name = "id", column = @Column(name = "map_id"))
 public class MapData extends BaseTripwiseEntity {
 
     // Waypoints stored as JSON string
