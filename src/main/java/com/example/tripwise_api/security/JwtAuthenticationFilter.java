@@ -33,6 +33,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
         final String requestURI = request.getRequestURI();
+        final String method = request.getMethod();
+
+        // CRITICAL: Skip ALL processing for OPTIONS requests (CORS preflight)
+        if ("OPTIONS".equals(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // Skip JWT validation for public endpoints
         if (requestURI.equals("/") ||
