@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public class UpdateExpenseRequest {
-    @NotNull(message = "Expense ID is required")
     private Integer expenseId;
 
     private Integer tripId;
