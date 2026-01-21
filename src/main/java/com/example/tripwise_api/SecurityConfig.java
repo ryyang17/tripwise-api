@@ -110,6 +110,7 @@ public class SecurityConfig {
                 ).permitAll()
                 // Health check and error endpoints
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/api/health/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()

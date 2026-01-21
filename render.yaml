@@ -42,6 +42,15 @@ services:
         value: DEBUG
       - key: LOGGING_LEVEL_COM_EXAMPLE_TRIPWISE_API_CONFIG
         value: DEBUG
+      # Additional timeout and performance configurations
+      - key: SERVER_TOMCAT_CONNECTION_TIMEOUT
+        value: "60s"
+      - key: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+        value: "45000"
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: "5"
+      - key: SPRING_TRANSACTION_DEFAULT_TIMEOUT
+        value: "180"
 
 databases:
   - name: tripwise-db

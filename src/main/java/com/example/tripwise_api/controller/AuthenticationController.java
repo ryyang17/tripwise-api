@@ -44,7 +44,11 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest, HttpServletResponse response) {
+        long startTime = System.currentTimeMillis();
         try {
+            // Log login attempt for debugging
+            System.out.println("Login attempt for user: " + authRequest.getUsername() + " at " + new java.util.Date());
+
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     authRequest.getUsername(),
@@ -58,13 +62,21 @@ public class AuthenticationController {
             // Set refresh token as HttpOnly cookie
             setRefreshTokenCookie(response, refreshToken);
 
+            long endTime = System.currentTimeMillis();
+            System.out.println("Login successful for user: " + authRequest.getUsername() + " in " + (endTime - startTime) + "ms");
+
             AuthResponse authResponse = new AuthResponse(accessToken, authRequest.getUsername(), "Login successful");
             return ResponseEntity.ok(authResponse);
 
         } catch (BadCredentialsException e) {
+            long endTime = System.currentTimeMillis();
+            System.out.println("Login failed (bad credentials) for user: " + authRequest.getUsername() + " in " + (endTime - startTime) + "ms");
             AuthResponse authResponse = new AuthResponse(null, null, "Invalid username or password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
         } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+            System.err.println("Login failed (error) for user: " + authRequest.getUsername() + " in " + (endTime - startTime) + "ms - " + e.getMessage());
+            e.printStackTrace();
             AuthResponse authResponse = new AuthResponse(null, null, "Login failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(authResponse);
         }

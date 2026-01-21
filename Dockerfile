@@ -35,9 +35,16 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
 # Set default Spring profile to prod
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Run with prod profile and proper JVM settings
+# Run with prod profile and proper JVM settings optimized for Render
 ENTRYPOINT ["java", \
+    "-Xms128m", \
+    "-Xmx512m", \
+    "-XX:+UseG1GC", \
+    "-XX:MaxGCPauseMillis=200", \
+    "-XX:+UseStringDeduplication", \
     "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}", \
     "-Djava.security.egd=file:/dev/./urandom", \
+    "-Dserver.tomcat.connection-timeout=60000", \
+    "-Dspring.datasource.hikari.connection-timeout=45000", \
     "-jar", \
     "app.jar"]
