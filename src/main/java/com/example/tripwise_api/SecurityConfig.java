@@ -47,6 +47,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    //
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -64,7 +65,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        // Disable CSRF for stateless JWT-based API
         // JWT tokens in Authorization header provide sufficient protection
         http.csrf(AbstractHttpConfigurer::disable);
 
@@ -125,25 +125,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Use specific allowed origins from configuration instead of wildcard
-        // In test profile, allow all origins for testing purposes
-        if ("integration-test".equals(activeProfile) || "test".equals(activeProfile)) {
-            configuration.setAllowedOriginPatterns(List.of("*"));
-        } else {
-            // In production/development, use specific origins
-            List<String> origins = Arrays.asList(allowedOrigins.split(","));
-            configuration.setAllowedOrigins(origins);
-        }
+        // Bepaal toegestane origins afhankelijk van het actieve profiel
+        List<String> origins = ("integration-test".equals(activeProfile) || "test".equals(activeProfile))
+            ? List.of("*")
+            : Arrays.asList(allowedOrigins.split(","));
+        configuration.setAllowedOrigins(origins);
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers for preflight
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Cache preflight for 1 hour
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
-

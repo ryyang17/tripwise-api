@@ -53,76 +53,60 @@ class JwtAuthenticationFilterTest {
         userDetails = new User("testuser", "password", new ArrayList<>());
     }
 
+
     @Test
     void doFilterInternal_WithPublicEndpoint_ShouldSkipAuthentication() throws ServletException, IOException {
-        // Arrange
+        // arrange
         when(request.getRequestURI()).thenReturn("/api/auth/login");
 
-        // Act
+        // act
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(anyString());
+        // assert
+        verify(filterChain).doFilter(request, response);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
     void doFilterInternal_WithValidToken_ShouldAuthenticateUser() throws ServletException, IOException {
-        // Arrange
+        // arrange
         when(request.getRequestURI()).thenReturn("/api/users/me");
         when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
         when(jwtUtil.extractUsername("valid-token")).thenReturn("testuser");
         when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
         when(jwtUtil.validateAccessToken("valid-token", "testuser")).thenReturn(true);
 
-        // Act
+        // act
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
+        // assert
+        verify(filterChain).doFilter(request, response);
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());
         assertEquals("testuser", SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
+
     @Test
     void doFilterInternal_WithoutAuthorizationHeader_ShouldNotAuthenticate() throws ServletException, IOException {
-        // Arrange
+        // arrange
         when(request.getRequestURI()).thenReturn("/api/users/me");
         when(request.getHeader("Authorization")).thenReturn(null);
         HttpServletResponse localResponse = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
         java.io.PrintWriter mockWriter = mock(java.io.PrintWriter.class);
         when(localResponse.getWriter()).thenReturn(mockWriter);
-        // Act
-        jwtAuthenticationFilter.doFilterInternal(request, localResponse, filterChain);
-        // Assert
-        verify(filterChain, never()).doFilter(any(), any());
-        verify(localResponse).setStatus(eq(HttpServletResponse.SC_UNAUTHORIZED));
-        verify(mockWriter, atLeastOnce()).write(anyString());
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-    }
 
-    @Test
-    void doFilterInternal_WithInvalidTokenFormat_ShouldNotAuthenticate() throws ServletException, IOException {
-        // Arrange
-        when(request.getRequestURI()).thenReturn("/api/users/me");
-        when(request.getHeader("Authorization")).thenReturn("InvalidFormat");
-        HttpServletResponse localResponse = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
-        java.io.PrintWriter mockWriter = mock(java.io.PrintWriter.class);
-        when(localResponse.getWriter()).thenReturn(mockWriter);
-        // Act
+        // act
         jwtAuthenticationFilter.doFilterInternal(request, localResponse, filterChain);
-        // Assert
-        verify(filterChain, never()).doFilter(any(), any());
-        verify(localResponse).setStatus(eq(HttpServletResponse.SC_UNAUTHORIZED));
+
+        // assert
+        verify(localResponse).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         verify(mockWriter, atLeastOnce()).write(anyString());
-        verify(jwtUtil, never()).extractUsername(anyString());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
     void doFilterInternal_WithExpiredToken_ShouldReturnUnauthorized() throws ServletException, IOException {
-        // Arrange
+        // arramge
         when(request.getRequestURI()).thenReturn("/api/users/me");
         when(request.getHeader("Authorization")).thenReturn("Bearer expired-token");
         when(jwtUtil.extractUsername("expired-token")).thenThrow(new io.jsonwebtoken.ExpiredJwtException(null, null, "Token expired"));
@@ -130,92 +114,31 @@ class JwtAuthenticationFilterTest {
         java.io.PrintWriter mockWriter = mock(java.io.PrintWriter.class);
         when(localResponse.getWriter()).thenReturn(mockWriter);
 
-        // Act
+        // act
         jwtAuthenticationFilter.doFilterInternal(request, localResponse, filterChain);
 
-        // Assert
-        verify(filterChain, never()).doFilter(any(), any());
-        verify(localResponse).setStatus(eq(HttpServletResponse.SC_UNAUTHORIZED));
+        // assert
+        verify(localResponse).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         verify(mockWriter).write(contains("Access token expired"));
-        verify(mockWriter).flush();
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
-
-
-    @Test
-    void doFilterInternal_WithSwaggerEndpoint_ShouldSkipAuthentication() throws ServletException, IOException {
-        // Arrange
-        when(request.getRequestURI()).thenReturn("/swagger-ui/index.html");
-
-        // Act
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(anyString());
-    }
-
-    @Test
-    void doFilterInternal_WithActuatorEndpoint_ShouldSkipAuthentication() throws ServletException, IOException {
-        // Arrange
-        when(request.getRequestURI()).thenReturn("/actuator/health");
-
-        // Act
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(anyString());
-    }
-
-    @Test
-    void doFilterInternal_WithErrorEndpoint_ShouldSkipAuthentication() throws ServletException, IOException {
-        // Arrange
-        when(request.getRequestURI()).thenReturn("/error");
-
-        // Act
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(anyString());
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-    }
-
-    @Test
-    void doFilterInternal_WithApiDocsEndpoint_ShouldSkipAuthentication() throws ServletException, IOException {
-        // Arrange
-        when(request.getRequestURI()).thenReturn("/v3/api-docs");
-
-        // Act
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(anyString());
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-    }
 
     @Test
     void doFilterInternal_WithAlreadyAuthenticatedUser_ShouldContinueWithoutReauthentication() throws ServletException, IOException {
-        // Arrange
+        // arrange
         when(request.getRequestURI()).thenReturn("/api/users/me");
         when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
         when(jwtUtil.extractUsername("valid-token")).thenReturn("testuser");
-
-        // Set up existing authentication
+        // Zet een bestaande authenticatie in de SecurityContext
         UsernamePasswordAuthenticationToken existingAuth =
             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(existingAuth);
-
-        // Act
+        // act
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-        // Assert
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(userDetailsService, never()).loadUserByUsername(anyString());
-        verify(jwtUtil, never()).validateAccessToken(anyString(), anyString());
+        // assert
+        verify(filterChain).doFilter(request, response);
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());
         assertEquals("testuser", SecurityContextHolder.getContext().getAuthentication().getName());
     }

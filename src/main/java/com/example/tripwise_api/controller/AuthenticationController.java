@@ -10,9 +10,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class AuthenticationController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
@@ -44,11 +49,7 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest, HttpServletResponse response) {
-        long startTime = System.currentTimeMillis();
         try {
-            // Log login attempt for debugging
-            System.out.println("Login attempt for user: " + authRequest.getUsername() + " at " + new java.util.Date());
-
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     authRequest.getUsername(),
@@ -62,21 +63,14 @@ public class AuthenticationController {
             // Set refresh token as HttpOnly cookie
             setRefreshTokenCookie(response, refreshToken);
 
-            long endTime = System.currentTimeMillis();
-            System.out.println("Login successful for user: " + authRequest.getUsername() + " in " + (endTime - startTime) + "ms");
-
             AuthResponse authResponse = new AuthResponse(accessToken, authRequest.getUsername(), "Login successful");
             return ResponseEntity.ok(authResponse);
 
         } catch (BadCredentialsException e) {
-            long endTime = System.currentTimeMillis();
-            System.out.println("Login failed (bad credentials) for user: " + authRequest.getUsername() + " in " + (endTime - startTime) + "ms");
             AuthResponse authResponse = new AuthResponse(null, null, "Invalid username or password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
         } catch (Exception e) {
-            long endTime = System.currentTimeMillis();
-            System.err.println("Login failed (error) for user: " + authRequest.getUsername() + " in " + (endTime - startTime) + "ms - " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Login failed: {}", e.getMessage(), e);
             AuthResponse authResponse = new AuthResponse(null, null, "Login failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(authResponse);
         }
@@ -104,6 +98,7 @@ public class AuthenticationController {
             AuthResponse authResponse = new AuthResponse(null, null, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(authResponse);
         } catch (Exception e) {
+            logger.error("Registration failed: {}", e.getMessage(), e);
             AuthResponse authResponse = new AuthResponse(null, null, "Registration failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(authResponse);
         }
@@ -136,6 +131,7 @@ public class AuthenticationController {
             }
 
         } catch (Exception e) {
+            logger.error("Token refresh failed: {}", e.getMessage(), e);
             AuthResponse authResponse = new AuthResponse(null, null, "Token refresh failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
         }
@@ -150,95 +146,51 @@ public class AuthenticationController {
             AuthResponse authResponse = new AuthResponse(null, null, "Logout successful");
             return ResponseEntity.ok(authResponse);
         } catch (Exception e) {
+            logger.error("Logout failed: {}", e.getMessage(), e);
             AuthResponse authResponse = new AuthResponse(null, null, "Logout failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(authResponse);
         }
     }
 
-    @GetMapping("/validate")
-    public ResponseEntity<AuthResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
-        try {
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                String username = jwtUtil.extractUsername(token);
-
-                if (jwtUtil.validateAccessToken(token, username)) {
-                    AuthResponse authResponse = new AuthResponse(token, username, "Token is valid");
-                    return ResponseEntity.ok(authResponse);
-                } else {
-                    AuthResponse authResponse = new AuthResponse(null, null, "Token is invalid");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
-                }
-            } else {
-                AuthResponse authResponse = new AuthResponse(null, null, "Authorization header is missing or invalid");
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(authResponse);
-            }
-        } catch (Exception e) {
-            AuthResponse authResponse = new AuthResponse(null, null, "Token validation failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResponse);
-        }
-    }
-
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure); // Now configurable per environment
-        cookie.setPath("/");
-        cookie.setMaxAge(30 * 24 * 60 * 60); // 30 days in seconds
-
-        // Set domain if configured
-        if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
-            cookie.setDomain(cookieDomain);
-        }
-
-        response.addCookie(cookie);
-
-        // Set SameSite attribute via response header (Spring Boot doesn't have direct setSameSite)
-        if (cookieSameSite != null && !cookieSameSite.trim().isEmpty()) {
-            String cookieHeader = String.format("refreshToken=%s; HttpOnly; Path=/; Max-Age=%d; SameSite=%s",
-                refreshToken, 30 * 24 * 60 * 60, cookieSameSite);
-
-            if (cookieSecure) {
-                cookieHeader += "; Secure";
-            }
-
-            if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
-                cookieHeader += "; Domain=" + cookieDomain;
-            }
-
-            response.setHeader("Set-Cookie", cookieHeader);
-        }
+        // roept helper met max age van 30 dagen aan
+        int thirtyDaysInSeconds = 30 * 24 * 60 * 60;
+        writeRefreshCookie(response, refreshToken, thirtyDaysInSeconds);
     }
 
     private void clearRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("refreshToken", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure); // Now configurable per environment
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // Expire immediately
+        // roept helper met max age van 0 seconden aan
+        writeRefreshCookie(response, "", 0);
+    }
 
-        // Set domain if configured
+
+    private void writeRefreshCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
+        Cookie servletCookie = new Cookie("refreshToken", value);
+        servletCookie.setHttpOnly(true);
+        servletCookie.setSecure(cookieSecure);
+        servletCookie.setPath("/");
+        servletCookie.setMaxAge(maxAgeSeconds);
+
         if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
-            cookie.setDomain(cookieDomain);
+            servletCookie.setDomain(cookieDomain);
+        }
+        response.addCookie(servletCookie);
+
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("refreshToken", value)
+            .httpOnly(true)
+            .secure(cookieSecure)
+            .path("/")
+            .maxAge(maxAgeSeconds);
+
+        if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
+            builder = builder.domain(cookieDomain);
         }
 
-        response.addCookie(cookie);
-
-        // Clear with SameSite attribute via response header
         if (cookieSameSite != null && !cookieSameSite.trim().isEmpty()) {
-            String cookieHeader = String.format("refreshToken=; HttpOnly; Path=/; Max-Age=0; SameSite=%s",
-                cookieSameSite);
-
-            if (cookieSecure) {
-                cookieHeader += "; Secure";
-            }
-
-            if (cookieDomain != null && !cookieDomain.trim().isEmpty()) {
-                cookieHeader += "; Domain=" + cookieDomain;
-            }
-
-            response.setHeader("Set-Cookie", cookieHeader);
+            builder = builder.sameSite(cookieSameSite);
         }
+
+        response.addHeader("Set-Cookie", builder.build().toString());
     }
 
     private String getRefreshTokenFromCookie(HttpServletRequest request) {

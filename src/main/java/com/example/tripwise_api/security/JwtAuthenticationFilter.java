@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -29,19 +33,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-                                  @NonNull FilterChain filterChain) throws ServletException, IOException {
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authorizationHeader = request.getHeader("Authorization");
         final String requestURI = request.getRequestURI();
         final String method = request.getMethod();
 
-        // CRITICAL: Skip ALL processing for OPTIONS requests (CORS preflight)
+        // 1) Allow CORS preflight through
         if ("OPTIONS".equals(method)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Skip JWT validation for public endpoints
+        // 2) Skip public endpoints
         if (requestURI.equals("/") ||
             requestURI.equals("/favicon.ico") ||
             requestURI.startsWith("/api/auth/") ||
@@ -56,67 +60,65 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username;
         String jwt;
 
-        logger.debug("Processing request to: " + requestURI);
-        logger.debug("Authorization header present: " + (authorizationHeader != null));
-
+        // 3) Expect a Bearer token
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
-                logger.debug("Extracted username from JWT: " + username);
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
-                logger.warn("JWT token is expired for request to: " + requestURI);
-                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Access token expired", "Please refresh your token");
+                // Token expired - client should use refresh
+                logger.warn("Access token expired for request to {}", requestURI);
+                sendUnauthorized(response, "Access token expired", "Please refresh your token");
                 return;
             } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.security.SignatureException e) {
-                logger.warn("Invalid JWT token for request to: " + requestURI);
+                logger.warn("Invalid JWT token for request to {}", requestURI);
                 sendAuthFailedResponse(response);
                 return;
             } catch (Exception e) {
-                logger.error("JWT token extraction failed: " + e.getMessage());
+                logger.error("JWT extraction failed for request {}: {}", requestURI, e.getMessage());
                 sendAuthFailedResponse(response);
                 return;
             }
         } else {
-            logger.debug("No Bearer token found in Authorization header for: " + requestURI);
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required", "Please log in to access this resource");
+            // No token presented
+            sendUnauthorized(response, "Authentication required", "Please log in to access this resource");
             return;
         }
 
+        // 4) If username found and no existing Authentication, validate token and set SecurityContext
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                // Validate specifically as access token
                 if (jwtUtil.validateAccessToken(jwt, username)) {
                     UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    logger.debug("Successfully authenticated user: " + username);
                 } else {
-                    logger.warn("Access token validation failed for user: " + username);
+                    logger.warn("Access token validation failed for user: {}", username);
                     sendAuthFailedResponse(response);
                     return;
                 }
             } catch (Exception e) {
-                logger.error("Error during authentication: " + e.getMessage());
+                logger.error("Error during authentication for user {}: {}", username, e.getMessage());
                 sendAuthFailedResponse(response);
                 return;
             }
         }
 
+        // 5) Continue filter chain
         filterChain.doFilter(request, response);
     }
 
-    private void sendErrorResponse(HttpServletResponse response, int status, String error, String message) throws IOException {
-        // 'status' is always HttpServletResponse.SC_UNAUTHORIZED in current usage, but method kept flexible for future use
-        response.setStatus(status);
+//
+    private void sendUnauthorized(HttpServletResponse response, String error, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write(String.format("{\"error\":\"%s\",\"message\":\"%s\"}", error, message));
         response.getWriter().flush();
     }
 
     private void sendAuthFailedResponse(HttpServletResponse response) throws IOException {
-        sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed", "Please log in again");
+        sendUnauthorized(response, "Authentication failed", "Please log in again");
     }
 }

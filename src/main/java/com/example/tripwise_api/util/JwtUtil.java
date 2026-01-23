@@ -23,6 +23,7 @@ public class JwtUtil {
     @Value("${jwt.refresh-token.expiration:2592000000}")  // 30 days
     private Long refreshTokenExpiration;
 
+    // om jwt te ondertekent met een secret key
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
