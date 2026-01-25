@@ -152,6 +152,28 @@ public class AuthenticationController {
         }
     }
 
+    @GetMapping("/validate")
+    public ResponseEntity<AuthResponse> validateToken(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null, "Missing or invalid Authorization header"));
+            }
+
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+
+            if (username != null && jwtUtil.validateAccessToken(token, username)) {
+                return ResponseEntity.ok(new AuthResponse(null, username, "Token is valid"));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null, "Invalid or expired token"));
+            }
+        } catch (Exception e) {
+            logger.error("Token validation failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null, "Token validation failed"));
+        }
+    }
+
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         // roept helper met max age van 30 dagen aan
         int thirtyDaysInSeconds = 30 * 24 * 60 * 60;

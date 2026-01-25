@@ -65,13 +65,13 @@ public class AuthIntegrationTest {
     }
 
     @Test
-    public void accessProtectedWithoutToken_shouldReturnForbidden() throws Exception {
+    public void accessProtectedWithoutToken_shouldReturnUnauthorized() throws Exception {
         mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    public void loginWithInvalidCredentials_shouldReturnUnauthorized() throws Exception {
+    public void loginWithInvalidUsername_shouldReturnUnauthorized() throws Exception {
         Map<String, String> login = Map.of("username", "invaliduser", "password", "wrongpassword");
         String loginJson = objectMapper.writeValueAsString(login);
 
