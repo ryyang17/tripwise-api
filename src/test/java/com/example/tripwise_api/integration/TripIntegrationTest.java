@@ -55,6 +55,19 @@ class TripIntegrationTest {
     private String testUser1Token;
     private String testUser2Token;
 
+    private Trip createTestTrip(String name, String destination, Long userId) {
+        Trip trip = new Trip();
+        trip.setTripName(name);
+        trip.setDestination(destination);
+        trip.setUserId(userId);
+        trip.setStartDate(LocalDate.of(2025, 6, 1));
+        trip.setEndDate(LocalDate.of(2025, 6, 5));
+        trip.setDescription("Test description");
+        trip.setTransportation("car");
+        trip.setCreatedDate(LocalDateTime.now());
+        return trip;
+    }
+
     @BeforeEach
     void setUp() {
         // Create test users for trip creation
@@ -247,20 +260,9 @@ class TripIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
-        // Assert - Transaction rolled back, no data persisted
+        // Assert
         assertEquals(0, tripRepository.findAll().size());
     }
 
-    private Trip createTestTrip(String name, String destination, Long userId) {
-        Trip trip = new Trip();
-        trip.setTripName(name);
-        trip.setDestination(destination);
-        trip.setUserId(userId);
-        trip.setStartDate(LocalDate.of(2025, 6, 1));
-        trip.setEndDate(LocalDate.of(2025, 6, 5));
-        trip.setDescription("Test description");
-        trip.setTransportation("car");
-        trip.setCreatedDate(LocalDateTime.now());
-        return trip;
-    }
+
 }
