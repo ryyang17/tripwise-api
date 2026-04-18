@@ -1,6 +1,5 @@
 # Render.com Blueprint Configuration
 # This file helps configure your service on Render
-
 services:
   - type: web
     name: tripwise-api
