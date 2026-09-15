@@ -39,8 +39,8 @@ Users can create trips, manage budgets, and add activities to their journeys.
 ### 2. Clone the repository
 
 ```powershell
-git clone https://github.com/your-username/tripwise-backend.git
-cd "TripWise API"
+git clone https://github.com/ryyang17/tripwise-api.git
+cd tripwise-api
 ```
 
 ### 3. Configure Environment Variables
@@ -111,8 +111,16 @@ docker run -p 8081:8080 --name tripwise-container --env SPRING_DATASOURCE_URL=jd
 - For database connection issues, check credentials and network settings.
 
 ## 🧪 Testing
-Run tests with:
+Run the unit and integration test suite with Gradle:
 
+```powershell
+./gradlew test
+```
 
+Test reports are generated under `build/reports/tests/test/`.
+
+## 🔗 Related Repository
+
+This API powers the [TripWise Frontend](https://github.com/ryyang17/tripwise-frontend), a React application for trip planning, budgeting, and itinerary management.
 
 ---
