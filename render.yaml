@@ -12,17 +12,11 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: tripwise-db
-          property: connectionString
+        sync: false  # set in Render dashboard (Aiven PostgreSQL)
       - key: SPRING_DATASOURCE_USERNAME
-        fromDatabase:
-          name: tripwise-db
-          property: user
+        sync: false  # set in Render dashboard (Aiven PostgreSQL)
       - key: SPRING_DATASOURCE_PASSWORD
-        fromDatabase:
-          name: tripwise-db
-          property: password
+        sync: false  # set in Render dashboard (Aiven PostgreSQL)
       - key: JWT_SECRET
         generateValue: true
         sync: false
@@ -50,9 +44,3 @@ services:
         value: "5"
       - key: SPRING_TRANSACTION_DEFAULT_TIMEOUT
         value: "180"
-
-databases:
-  - name: tripwise-db
-    databaseName: tripwise_db
-    user: tripwise_user
-    plan: free

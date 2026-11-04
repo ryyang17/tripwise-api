@@ -47,7 +47,6 @@ public class UserService {
         return userDAL.saveUser(user);
     }
 
-
     public User registerUser(String username, String email, String password) {
         // Check if username already exists
         if (userDAL.findByUsername(username).isPresent()) {
