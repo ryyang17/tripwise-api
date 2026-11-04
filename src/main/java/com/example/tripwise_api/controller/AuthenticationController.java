@@ -47,6 +47,10 @@ public class AuthenticationController {
         this.authenticationManager = authenticationManager;
     }
 
+    private Long findUserId(String username) {
+        return userService.findByUsername(username).map(User::getId).orElse(null);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest, HttpServletResponse response) {
         try {
@@ -63,7 +67,7 @@ public class AuthenticationController {
             // Set refresh token as HttpOnly cookie
             setRefreshTokenCookie(response, refreshToken);
 
-            AuthResponse authResponse = new AuthResponse(accessToken, authRequest.getUsername(), "Login successful");
+            AuthResponse authResponse = new AuthResponse(accessToken, authRequest.getUsername(), "Login successful", findUserId(authRequest.getUsername()));
             return ResponseEntity.ok(authResponse);
 
         } catch (BadCredentialsException e) {
@@ -91,7 +95,7 @@ public class AuthenticationController {
             // Set refresh token as HttpOnly cookie
             setRefreshTokenCookie(response, refreshToken);
 
-            AuthResponse authResponse = new AuthResponse(accessToken, user.getUsername(), "Registration successful");
+            AuthResponse authResponse = new AuthResponse(accessToken, user.getUsername(), "Registration successful", user.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
 
         } catch (IllegalArgumentException e) {
@@ -123,7 +127,7 @@ public class AuthenticationController {
                 // Update refresh token cookie
                 setRefreshTokenCookie(response, newRefreshToken);
 
-                AuthResponse authResponse = new AuthResponse(newAccessToken, username, "Token refreshed successfully");
+                AuthResponse authResponse = new AuthResponse(newAccessToken, username, "Token refreshed successfully", findUserId(username));
                 return ResponseEntity.ok(authResponse);
             } else {
                 AuthResponse authResponse = new AuthResponse(null, null, "Invalid refresh token");
@@ -164,7 +168,7 @@ public class AuthenticationController {
             String username = jwtUtil.extractUsername(token);
 
             if (username != null && jwtUtil.validateAccessToken(token, username)) {
-                return ResponseEntity.ok(new AuthResponse(null, username, "Token is valid"));
+                return ResponseEntity.ok(new AuthResponse(null, username, "Token is valid", findUserId(username)));
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null, "Invalid or expired token"));
             }

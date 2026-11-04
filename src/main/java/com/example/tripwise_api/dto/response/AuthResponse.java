@@ -6,12 +6,26 @@ public class AuthResponse {
     private String accessToken;
     private String username;
     private String message;
+    private Long userId;
 
 
     public AuthResponse(String accessToken, String username, String message) {
+        this(accessToken, username, message, null);
+    }
+
+    public AuthResponse(String accessToken, String username, String message, Long userId) {
         this.accessToken = accessToken;
         this.username = username;
         this.message = message;
+        this.userId = userId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getAccessToken() {

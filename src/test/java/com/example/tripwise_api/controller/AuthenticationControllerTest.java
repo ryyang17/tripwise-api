@@ -80,6 +80,9 @@ class AuthenticationControllerTest {
             .thenReturn(null);
         when(jwtUtil.generateAccessToken("testuser")).thenReturn("access-token");
         when(jwtUtil.generateRefreshToken("testuser")).thenReturn("refresh-token");
+        User loginUser = new User();
+        loginUser.setId(42L);
+        when(userService.findByUsername("testuser")).thenReturn(java.util.Optional.of(loginUser));
 
         // Act
         ResponseEntity<AuthResponse> result = authenticationController.login(authRequest, response);
@@ -87,6 +90,7 @@ class AuthenticationControllerTest {
         // Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertNotNull(result.getBody());
+        assertEquals(42L, result.getBody().getUserId());
         assertEquals("access-token", result.getBody().getAccessToken());
         assertEquals("testuser", result.getBody().getUsername());
         assertEquals("Login successful", result.getBody().getMessage());
@@ -126,6 +130,7 @@ class AuthenticationControllerTest {
         assertNotNull(result.getBody());
         assertEquals("access-token", result.getBody().getAccessToken());
         assertEquals("newuser", result.getBody().getUsername());
+        assertEquals(1L, result.getBody().getUserId());
         verify(userService, times(1)).registerUser(
             registerRequest.getUsername(),
             registerRequest.getEmail(),
